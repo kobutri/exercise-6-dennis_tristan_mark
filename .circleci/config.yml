@@ -1,0 +1,27 @@
+version: 2.0
+jobs:
+  build:
+    docker:
+      - image: gcc:9
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          no_output_timeout: 20s
+          command: |
+            update-alternatives --install /usr/bin/gfortran gfortran /usr/local/bin/gfortran 999
+            apt-get update && apt-get install -y ninja-build libopenmpi-dev pybind11-dev python3-dev
+            curl -L -o custom-cmake.tar.gz https://github.com/Kitware/CMake/releases/download/v3.16.1/cmake-3.16.1-Linux-x86_64.tar.gz
+            mkdir custom-cmake
+            tar -xf custom-cmake.tar.gz --strip 1 -C custom-cmake
+            rm custom-cmake.tar.gz
+      - run:
+          name: Build and Testing with CTest
+          no_output_timeout: 20s
+          command: |
+            export PATH=$PATH:$PWD/custom-cmake/bin
+            mkdir -p build
+            cd build
+            cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPMSC_ALLOW_MPI_TESTS_AS_ROOT=ON
+            ninja -v -k 0
+            ctest -V
