@@ -61,7 +61,7 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
         new_node_counts_[i] = array_node_counts[i];
     }
 
-    partition_ = ContiguousParallelPartition(newcomm, vector_node_counts);
+    partition_ = ContiguousParallelPartition(newcomm, vector_node_counts);   // <- has to be changed
 
 }
 
@@ -260,7 +260,10 @@ MultiIndex RegularGrid::node_count_per_dimension() const
 
 MultiIndex RegularGrid::node_count_per_dimension(int process_rank) const
 {
-    
+    int last_process = partition_.owner_process(global_size - 1);
+
+    assert(last_process >= process_rank);
+    assert(process_rank >= 0);
     int local_index = partition_.local_size(process_rank)-1;
     int global_index = partition_.to_global_index(local_index, process_rank);
     MultiIndex process_max_corner = single_to_multiindex(global_index, node_count_per_dimension_);
