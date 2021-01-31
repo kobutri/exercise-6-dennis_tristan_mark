@@ -195,11 +195,17 @@ const ContiguousParallelPartition& RegularGrid::partition() const
 
 MultiIndex RegularGrid::processes_per_dimension() const     //
 {
-    /*MultiIndex coords();
-    MPI_Cart_coords(partition_.communicator(), partition_.prozess(), node_count_per_dimension_.size(), &coords);
-    return coords;*/
+    MultiIndex coordinates(space_dimension);
+    int coords[space_dimension];
+    int global_size = partition_.global_size();
+    int last_process = partition_.owner_process(global_size - 1);
+    MPI_Cart_coords(partition_.communicator(), last_process, space_dimension, &coords);
+    for(int i = 0; i < coords.size(); i++)
+    {
+        coordinates[i] = coords[i] + 1;
+    }
 
-    return new_node_counts_;
+    return coordinates;
 }
 
 MultiIndex RegularGrid::local_process_coordinates() const
