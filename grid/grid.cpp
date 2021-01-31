@@ -39,7 +39,11 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
     }
     
     MPI_Comm newcomm;
-    int periods[space_dimension] = 0;
+    int periods[space_dimension];
+    for(int i = 0; i < space_dimension; i++)
+    {
+        periods[i] = 1;
+    }
     for(int i = 0; i < space_dimension; i++)
     {
         number_of_nodes *= global_node_count_per_dimension[i];
@@ -47,13 +51,13 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
 
     MPI_Dims_create(number_of_nodes, space_dimension, array_node_counts);
 
-    MPI_Cart_create(communicator, space_dimension, array_node_counts, periods, 0, &newcomm);
+    MPI_Cart_create(communicator, space_dimension, array_node_counts, periods, 1, &newcomm);
 
-    std::vector<int> vector_node_counts();
+    std::vector<int> vector_node_counts(space_dimension);
 
-    for(int i = 0; i < array_node_counts.size(); i++)
+    for(int i = 0; i < space_dimension; i++)
     {
-        vector_node_counts.push_back(array_node_counts[i]);
+        vector_node_counts[i] = array_node_counts[i];
         new_node_counts_[i] = array_node_counts[i];
     }
 
@@ -201,7 +205,7 @@ MultiIndex RegularGrid::processes_per_dimension() const     //
     int global_size = partition_.global_size();
     int last_process = partition_.owner_process(global_size - 1);
     MPI_Cart_coords(partition_.communicator(), last_process, space_dimension, coords);
-    for(int i = 0; i < coords.size(); i++)
+    for(int i = 0; i < space_dimension; i++)
     {
         coordinates[i] = coords[i] + 1;
     }
