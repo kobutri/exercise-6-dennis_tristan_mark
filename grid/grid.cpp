@@ -29,23 +29,25 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
     min_corner_(min_corner), max_corner_(max_corner), node_count_per_dimension_(global_node_count_per_dimension)
 {
     int number_of_nodes = 0;
-    int dimensions = global_node_count_per_dimension.size();
 
     //array_node_counts(space_dimension) int *dims,
-    std::array<int, space_dimension> array_node_counts;
+    int array_node_counts[space_dimension];
+    
     for(int i = 0; i < global_node_count_per_dimension.size(); i++)
     {
         array_node_counts[i] = global_node_count_per_dimension[i];
     }
+    
     MPI_Comm newcomm;
-    std::vector<int> periods(dimensions, 0);
-    for(int i = 0; i < dimensions; i++)
+    int periods[space_dimension] = 0;
+    for(int i = 0; i < space_dimension; i++)
     {
         number_of_nodes *= global_node_count_per_dimension[i];
     }
-    MPI_Dims_create(number_of_nodes, space_dimension, &array_node_counts);
 
-    MPI_Cart_create(communicator, dimensions, &array_node_counts, &periods, 0, &newcomm);
+    MPI_Dims_create(number_of_nodes, space_dimension, array_node_counts);
+
+    MPI_Cart_create(communicator, space_dimension, array_node_counts, periods, 0, &newcomm);
 
     std::vector<int> vector_node_counts();
 
@@ -198,7 +200,7 @@ MultiIndex RegularGrid::processes_per_dimension() const     //
     int coords[space_dimension];
     int global_size = partition_.global_size();
     int last_process = partition_.owner_process(global_size - 1);
-    MPI_Cart_coords(partition_.communicator(), last_process, space_dimension, &coords);
+    MPI_Cart_coords(partition_.communicator(), last_process, space_dimension, coords);
     for(int i = 0; i < coords.size(); i++)
     {
         coordinates[i] = coords[i] + 1;
@@ -210,7 +212,7 @@ MultiIndex RegularGrid::processes_per_dimension() const     //
 MultiIndex RegularGrid::local_process_coordinates() const
 {
     int coords[space_dimension];
-    MPI_Cart_coords(partition_.communicator(), partition_.process(), space_dimension, &coords);
+    MPI_Cart_coords(partition_.communicator(), partition_.process(), space_dimension, coords);
     MultiIndex coordinates(space_dimension);
     for(int i = 0; i < space_dimension; i++)
     {
