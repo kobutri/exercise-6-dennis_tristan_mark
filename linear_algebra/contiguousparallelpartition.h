@@ -31,7 +31,10 @@ public:
     int process() const;
     int to_global_index(int local_index, int owner_process) const;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 private:
     MPI_Comm comm_{};
     int comm_size_;

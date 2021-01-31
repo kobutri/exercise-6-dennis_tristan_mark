@@ -5,7 +5,8 @@
 #include "../common/space_dimension.h"
 #include <assert.h>
 
-class Point {
+class Point
+{
 public:
     static_assert(space_dimension > 0 && space_dimension <= 3, "Invalid space dimension");
 
@@ -28,15 +29,15 @@ public:
     int size() const;
 
     //! Returns the `i`th coordinate value of the point.
-    const scalar_t &operator[](int i) const;
+    const scalar_t& operator[](int i) const;
 
     //! Returns a mutable reference to the `i`th coordinate value of the point.
-    scalar_t &operator[](int i);
+    scalar_t& operator[](int i);
 
 private:
     scalar_t values[space_dimension];
 };
 
-bool equals(const Point &lhs, const Point &rhs);
+bool equals(const Point& lhs, const Point& rhs);
 
 #endif // PMSC_POINT_H

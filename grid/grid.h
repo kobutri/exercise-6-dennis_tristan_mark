@@ -4,24 +4,49 @@
 #include <array>
 #include <memory>
 #include <utility>
+<<<<<<< HEAD
+=======
+#include <mpi.h>
+#include <vector>
+
+#include "../common/space_dimension.h"
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 #include "multiindex.h"
 #include "point.h"
 #include "../linear_algebra/contiguousparallelpartition.h"
 
+<<<<<<< HEAD
 enum class NeighborSuccession {
+=======
+enum class NeighborSuccession
+{
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
     predecessor,
     successor
 };
 
+<<<<<<< HEAD
 class RegularGrid {
+=======
+class RegularGrid
+{
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 public:
     using triplet_type = std::tuple<scalar_t, scalar_t, int>;
 
     RegularGrid() = default;
 
+<<<<<<< HEAD
     RegularGrid(const RegularGrid &other);
 
     RegularGrid(RegularGrid &&other) noexcept;
+=======
+    RegularGrid(const RegularGrid& other);
+
+    RegularGrid(RegularGrid&& other) noexcept;
+
+    RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corner, MultiIndex global_node_count_per_dimension);
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 
     //! Creates a regular grid covering a specified domain.
     //!
@@ -30,8 +55,11 @@ public:
     //! \param node_count_per_dimension  Number of nodes in each space dimension \f$\bm{n}\f$.
     RegularGrid(Point min_corner, Point max_corner, MultiIndex node_count_per_dimension);
 
+<<<<<<< HEAD
     RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corner, MultiIndex global_node_count_per_dimension);
 
+=======
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
     //! Returns the number of nodes in each space dimension \f$\bm{n}\f$.
     MultiIndex node_count_per_dimension() const;
 
@@ -45,7 +73,11 @@ public:
     int number_of_boundary_nodes() const;
 
     //! Returns the number of neighbors a node identified by its one-dimensional index \f$ i \f$ has.
+<<<<<<< HEAD
     int number_of_neighbors(int node_index) const;
+=======
+    int number_of_neighbors(int local_node_index) const;
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 
     //! Computes the indices of the neighbors of a given node.
     //!
@@ -59,6 +91,7 @@ public:
     //!                   should be -1 at that location.
     //!
     //! \returns The number of neighbors the given node has.
+<<<<<<< HEAD
     int neighbors_of(int node_index, std::array<std::pair<int, int>, space_dimension> &neighbors) const;
 
     //! Returns true if the node with the given index is located at the boundary of the domain.
@@ -66,6 +99,15 @@ public:
 
     //! Returns the coordinates \f$\bm{x}\f$ of a given node.
     Point node_coordinates(int node_index) const;
+=======
+    int neighbors_of(int local_node_index, std::array<std::pair<int, int>, space_dimension>& neighbors) const;
+
+    //! Returns true if the node with the given index is located at the boundary of the domain.
+    bool is_boundary_node(int global_node_index) const;
+
+    //! Returns the coordinates \f$\bm{x}\f$ of a given node.
+    Point node_coordinates(int global_node_index) const;
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 
     //! Returns the distance of a node to one of his neighbors.
     //!
@@ -74,14 +116,35 @@ public:
     //! \param neighbor_succession  Indicates whether to return the distance to the predecessor or the successor
     //!                             in the specified space dimension.
     scalar_t
+<<<<<<< HEAD
     node_neighbor_distance(int node_index, int neighbor_direction, NeighborSuccession neighbor_succession) const;
+=======
+    node_neighbor_distance(int local_node_index, int neighbor_direction, NeighborSuccession neighbor_succession) const;
+
+    const ContiguousParallelPartition& partition() const;
+
+    MultiIndex processes_per_dimension() const;
+
+    MultiIndex local_process_coordinates() const;
+
+    MultiIndex global_node_count_per_dimension() const;
+
+    //MultiIndex node_count_per_dimension() const;
+
+    MultiIndex node_count_per_dimension(int process_rank) const;
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 
 private:
     Point min_corner_;
     Point max_corner_;
     MultiIndex node_count_per_dimension_;
+<<<<<<< HEAD
     ContiguousParallelPartition partition_ ;
     MPI_Comm comm_{};
+=======
+    MultiIndex new_node_counts_;    
+    ContiguousParallelPartition partition_;
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 };
 
 #endif // PMSC_GRID_H

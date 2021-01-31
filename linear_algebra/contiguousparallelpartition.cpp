@@ -135,6 +135,7 @@ int ContiguousParallelPartition::process() const
     return rank;
 }
 
+<<<<<<< HEAD
 int ContiguousParallelPartition:: to_global_index(int local_index, int owner_process) const
 {
     assert(owner_process < comm_size_);
@@ -149,6 +150,17 @@ int ContiguousParallelPartition:: to_global_index(int local_index, int owner_pro
 }
 
 
+=======
+int ContiguousParallelPartition::to_global_index(int local_index, int owner_process) const 
+{
+    assert(local_index < local_size());
+    return partition_[owner_process] + local_index;
+    //int coords = -1;
+    //MPI_Cart_coords(comm_, owner_process, maxdims, &coords);     
+    //return coords  + local_index;             
+}
+
+>>>>>>> 66222a7d9f02c12d76db4c9900de89c48eeae539
 ContiguousParallelPartition create_partition(MPI_Comm communicator, int local_size)
 {
     int local_start = 0;

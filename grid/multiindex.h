@@ -3,7 +3,8 @@
 
 #include "../common/space_dimension.h"
 
-class MultiIndex {
+class MultiIndex
+{
 public:
     static_assert(space_dimension > 0 && space_dimension <= 3, "Invalid space dimension");
 
@@ -26,22 +27,22 @@ public:
     int size() const;
 
     //! Tests if two multi indices are equal
-    bool operator==(const MultiIndex &other) const;
+    bool operator==(const MultiIndex& other) const;
 
     //! Tests if two multi indices are inequal
-    bool operator!=(const MultiIndex &other) const;
+    bool operator!=(const MultiIndex& other) const;
 
     //! Returns the `i`th coordinate value of the multi index.
-    const int &operator[](int i) const;
+    const int& operator[](int i) const;
 
     //! Returns a mutable reference to the `i`th coordinate value of the multi index.
-    int &operator[](int i);
+    int& operator[](int i);
 
 private:
     int data_[space_dimension];
 };
 
-int multi_to_single_index(const MultiIndex &a, const MultiIndex n);
+int multi_to_single_index(const MultiIndex& a, const MultiIndex n);
 
 MultiIndex single_to_multiindex(int i, const MultiIndex n);
 
