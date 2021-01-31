@@ -30,7 +30,6 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
 {
     int number_of_nodes = 0;
     int dimensions = global_node_count_per_dimension.size();
-    //std::copy(global_node_count_per_dimension.begin(), global_node_count_per_dimension.end(), new_node_counts_.get());
 
     //array_node_counts(space_dimension) int *dims,
     std::array<int, space_dimension> array_node_counts;
