@@ -26,42 +26,44 @@ RegularGrid::RegularGrid(Point min_corner, Point max_corner, MultiIndex node_cou
 }
 
 RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corner, MultiIndex global_node_count_per_dimension) :
-    min_corner_(min_corner), max_corner_(max_corner), node_count_per_dimension_(global_node_count_per_dimension)
+   min_corner_(min_corner),
+   max_corner_(max_corner),
+   node_count_per_dimension_(global_node_count_per_dimension_)
 {
-    int number_of_nodes = 0;
-    int dimensions = global_node_count_per_dimension.size();
-
-    //array_node_counts(space_dimension) int *dims,
-    std::array<int, space_dimension> array_node_counts;
-    for(int i = 0; i < global_node_count_per_dimension.size(); i++)
+    int size = 0;
+    MPI_Comm_size(communicator, &size);
+    int process_per_dim[space_dimension];
+    int periods[space_dimension];
+    int nodes_counter;
+    int coordinates[space_dimension];
+    MPI_Dims_create(size, space_dimension , process_per_dim);
+    MPI_Comm new_communicator;
+    int MPI_Cart_create(communicator, space_dimension, process_per_dim, periods, true, &new_communicator);
+    int number_of_processes = 1;
+    for (int i = 0; i< space_dimension; i++)
     {
-        array_node_counts[i] = global_node_count_per_dimension[i];
+        number_of_processes *= process_per_dim;
     }
-    MPI_Comm newcomm;
-    std::vector<int> periods(dimensions, 0);
-    for(int i = 0; i < dimensions; i++)
+    std::vector<int> partition(number_of_processes+1);
+    partition[0] = 0;
+    for (int i = 0; i<number_of_processes; i++)
     {
-        number_of_nodes *= global_node_count_per_dimension[i];
+        nodes_counter = 1;
+        MPI_Cart_coords(new_communicator, i, space_dimension, coordinates);
+        for (int j = 0; j < space_dimension; j++)
+        {
+            if (coordinates[j] < process_per_dim[j]-1)
+            {
+                nodes_counter *= global_node_count_per_dimension[j]/process_per_dim[j];
+            }
+            else
+            {
+                nodes_counter *= global_node_count_per_dimension[j]*(1-(process_per_dim[j]-1)/process_per_dim[j]);
+            }        
+        }
+        partition[i+1] = [partition[i]+nodes_counter]
     }
-    MPI_Dims_create(number_of_nodes, space_dimension, &array_node_counts);
-
-    MPI_Cart_create(communicator, dimensions, &array_node_counts, &periods, 0, &newcomm);
-
-    std::vector<int> vector_node_counts();
-
-    for(int i = 0; i < array_node_counts.size(); i++)
-    {
-        vector_node_counts.push_back(array_node_counts[i]);
-        new_node_counts_[i] = array_node_counts[i];
-    }
-
-    partition_ = ContiguousParallelPartition(newcomm, vector_node_counts);
-
-}
-
-MultiIndex RegularGrid::global_node_count_per_dimension() const
-{
-    return node_count_per_dimension_;
+    partition_ = ContiguousParallelPartition(new_communicator, partition);
 }
 
 int RegularGrid::number_of_nodes() const         //there are no changes
@@ -194,17 +196,17 @@ const ContiguousParallelPartition& RegularGrid::partition() const
 
 MultiIndex RegularGrid::processes_per_dimension() const     //
 {
-    MultiIndex coordinates(space_dimension);
+    MultiIndex processes_per_dim(space_dimension);
     int coords[space_dimension];
     int global_size = partition_.global_size();
     int last_process = partition_.owner_process(global_size - 1);
     MPI_Cart_coords(partition_.communicator(), last_process, space_dimension, &coords);
     for(int i = 0; i < coords.size(); i++)
     {
-        coordinates[i] = coords[i] + 1;
+        processes_per_dim[i] = coords[i] + 1;
     }
 
-    return coordinates;
+    return processes_per_dim;
 }
 
 MultiIndex RegularGrid::local_process_coordinates() const
@@ -219,16 +221,15 @@ MultiIndex RegularGrid::local_process_coordinates() const
     return coordinates;
 }
 
-    /*MultiIndex RegularGrid::global_node_count_per_dimension() const
+MultiIndex RegularGrid::global_node_count_per_dimension() const
 {
     return node_count_per_dimension_;
-}*/
+}
 
 MultiIndex RegularGrid::node_count_per_dimension() const
 {
-    int process_rank = partition_.process();
-    int local_index = partition_.local_size(process_rank) - 1;
-    int global_index = partition_.to_global_index(local_index, process_rank);
+    int last_local_index = partition_.local_size() - 1;
+    int global_index = partition_.to_global_index(last_local_index);
     MultiIndex process_max_corner = single_to_multiindex(global_index, node_count_per_dimension_);
     MultiIndex node_count_per_dimension(space_dimension);
 
@@ -237,7 +238,7 @@ MultiIndex RegularGrid::node_count_per_dimension() const
 
     for(int i = 0; i < max_corner_.size(); i++)
     {
-        node_count_per_dimension[i] = static_cast<int>((process_max_corner[i] - process_min_corner[i]) * node_count_per_dimension_[i] / (max_corner_[i] - min_corner_[i]));
+        node_count_per_dimension[i] = process_max_corner[i] - process_min_corner[i] +1 ;//* node_count_per_dimension_[i] / (max_corner_[i] - min_corner_[i]));
     }
     return node_count_per_dimension;
     //int coords = local_process_coordinates();
@@ -255,8 +256,8 @@ MultiIndex RegularGrid::node_count_per_dimension() const
 MultiIndex RegularGrid::node_count_per_dimension(int process_rank) const
 {
     
-    int local_index = partition_.local_size(process_rank)-1;
-    int global_index = partition_.to_global_index(local_index, process_rank);
+    int last_local_index = partition_.local_size(process_rank)-1;
+    int global_index = partition_.to_global_index(last_local_index, process_rank);
     MultiIndex process_max_corner = single_to_multiindex(global_index, node_count_per_dimension_);
     MultiIndex node_count_per_dimension(space_dimension);
     
@@ -265,7 +266,7 @@ MultiIndex RegularGrid::node_count_per_dimension(int process_rank) const
     
     for(int i = 0; i < max_corner_.size(); i++)
     {
-        node_count_per_dimension[i] = static_cast<int>((process_max_corner[i] - process_min_corner[i]) * node_count_per_dimension_[i] / (max_corner_[i] - min_corner_[i]));
+        node_count_per_dimension[i] = process_max_corner[i] - process_min_corner[i]+1;// * node_count_per_dimension_[i] / (max_corner_[i] - min_corner_[i]));
     }
     return node_count_per_dimension;
 }
