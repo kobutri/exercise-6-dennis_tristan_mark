@@ -200,8 +200,8 @@ MultiIndex RegularGrid::processes_per_dimension() const     //
     int coords[space_dimension];
     int global_size = partition_.global_size();
     int last_process = partition_.owner_process(global_size - 1);
-    MPI_Cart_coords(partition_.communicator(), last_process, space_dimension, &coords);
-    for(int i = 0; i < coords.size(); i++)
+    MPI_Cart_coords(partition_.communicator(), last_process, space_dimension, coords);
+    for(int i = 0; i < space_dimension; i++)
     {
         processes_per_dim[i] = coords[i] + 1;
     }
@@ -212,7 +212,7 @@ MultiIndex RegularGrid::processes_per_dimension() const     //
 MultiIndex RegularGrid::local_process_coordinates() const
 {
     int coords[space_dimension];
-    MPI_Cart_coords(partition_.communicator(), partition_.process(), space_dimension, &coords);
+    MPI_Cart_coords(partition_.communicator(), partition_.process(), space_dimension, coords);
     MultiIndex coordinates(space_dimension);
     for(int i = 0; i < space_dimension; i++)
     {
@@ -255,9 +255,12 @@ MultiIndex RegularGrid::node_count_per_dimension() const
 
 MultiIndex RegularGrid::node_count_per_dimension(int process_rank) const
 {
-    
-    int last_local_index = partition_.local_size(process_rank)-1;
-    int global_index = partition_.to_global_index(last_local_index, process_rank);
+    int last_process = partition_.owner_process(global_size - 1);
+
+    assert(last_process >= process_rank);
+    assert(process_rank >= 0);
+    int local_index = partition_.local_size(process_rank)-1;
+    int global_index = partition_.to_global_index(local_index, process_rank);
     MultiIndex process_max_corner = single_to_multiindex(global_index, node_count_per_dimension_);
     MultiIndex node_count_per_dimension(space_dimension);
     
