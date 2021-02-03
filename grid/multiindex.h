@@ -2,6 +2,7 @@
 #define PMSC_MULTIINDEX_H
 
 #include "../common/space_dimension.h"
+#include "../linear_algebra/contiguousparallelpartition.h"
 
 class MultiIndex
 {

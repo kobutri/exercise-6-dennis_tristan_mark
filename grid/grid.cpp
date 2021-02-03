@@ -6,43 +6,65 @@
 RegularGrid::RegularGrid(const RegularGrid& other) :
     min_corner_(other.min_corner_),
     max_corner_(other.max_corner_),
-    node_count_per_dimension_(other.node_count_per_dimension_) {}
+    node_count_per_dimension_(other.node_count_per_dimension_),
+    partition_(other.partition_),
+    local_min_corner_(other.local_min_corner_),
+    local_node_count_per_dimension_(other.local_node_count_per_dimension_) {}
 
 RegularGrid::RegularGrid(RegularGrid&& other) noexcept :
     min_corner_(other.min_corner_),
     max_corner_(other.max_corner_),
-    node_count_per_dimension_(other.node_count_per_dimension_) {}
+    node_count_per_dimension_(other.node_count_per_dimension_),
+    partition_(other.partition_),
+    local_min_corner_(other.local_min_corner_),
+    local_node_count_per_dimension_(other.local_node_count_per_dimension_) {}
 
 RegularGrid::RegularGrid(Point min_corner, Point max_corner, MultiIndex node_count_per_dimension_) :
     min_corner_(min_corner),
     max_corner_(max_corner),
-    node_count_per_dimension_(node_count_per_dimension_)
+    node_count_per_dimension_(node_count_per_dimension_),
+    local_min_corner_(MultiIndex(0)),
+    local_node_count_per_dimension_(node_count_per_dimension_)
 {
     for(int i = 0; i < space_dimension; i++)
     {
         assert(min_corner[i] <= max_corner[i]);
         assert(node_count_per_dimension_[i] >= 0);
+
     }
+    partition_  = ContiguousParallelPartition(MPI_COMM_SELF, {0, number_of_nodes()});
 }
 
 RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corner, MultiIndex global_node_count_per_dimension) :
    min_corner_(min_corner),
    max_corner_(max_corner),
-   node_count_per_dimension_(global_node_count_per_dimension_)
+   node_count_per_dimension_(global_node_count_per_dimension)
 {
-    int size = 0;
+    for(int i = 0; i < space_dimension; i++)
+    {
+        assert(min_corner[i] <= max_corner[i]);
+        assert(node_count_per_dimension_[i] >= 0);
+
+    }
+    process_per_dim_ = MultiIndex();
+    local_min_corner_ = MultiIndex();
+    int size;
     MPI_Comm_size(communicator, &size);
-    int process_per_dim[space_dimension];
-    int periods[space_dimension];
+    int process_per_dim[space_dimension] = {0};
+    int periods[space_dimension] = {0};
     int nodes_counter;
     int coordinates[space_dimension];
     MPI_Dims_create(size, space_dimension , process_per_dim);
+    for(int i = 0; i < space_dimension; i++)
+    {
+        process_per_dim_[i] = process_per_dim[i];
+    }
     MPI_Comm new_communicator;
-    int MPI_Cart_create(communicator, space_dimension, process_per_dim, periods, true, &new_communicator);
+    MPI_Cart_create(communicator, space_dimension, process_per_dim, periods, true, &new_communicator);
     int number_of_processes = 1;
     for (int i = 0; i< space_dimension; i++)
     {
-        number_of_processes *= process_per_dim;
+        number_of_processes *= process_per_dim[i];
     }
     std::vector<int> partition(number_of_processes+1);
     partition[0] = 0;
@@ -61,12 +83,18 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
                 nodes_counter *= global_node_count_per_dimension[j]*(1-(process_per_dim[j]-1)/process_per_dim[j]);
             }        
         }
-        partition[i+1] = [partition[i]+nodes_counter]
+        partition[i+1] = partition[i]+nodes_counter ;
     }
     partition_ = ContiguousParallelPartition(new_communicator, partition);
+    MPI_Cart_coords(new_communicator, partition_.process(), space_dimension, coordinates);
+    for(int i = 0; i < space_dimension; i++)
+    {
+        local_min_corner_[i] = coordinates[i] * global_node_count_per_dimension[i]/process_per_dim[i];
+    }
+    node_count_per_dimension_ = node_count_per_dimension(partition_.process());
 }
 
-int RegularGrid::number_of_nodes() const         //there are no changes
+int RegularGrid::number_of_nodes() const         
 {
     int result = 1;
     for(int i = 0; i < space_dimension; i++)
@@ -76,7 +104,7 @@ int RegularGrid::number_of_nodes() const         //there are no changes
     return result;
 }
 
-int RegularGrid::number_of_inner_nodes() const   //there are no changes
+int RegularGrid::number_of_inner_nodes() const   
 {
     int result = 1;
     for(int i = 0; i < space_dimension; i++)
@@ -86,17 +114,17 @@ int RegularGrid::number_of_inner_nodes() const   //there are no changes
     return result;
 }
 
-int RegularGrid::number_of_boundary_nodes() const    //there are no changes
+int RegularGrid::number_of_boundary_nodes() const   
 {
     return number_of_nodes() - number_of_inner_nodes();
 }
 
-int RegularGrid::number_of_neighbors(int node_index) const
+int RegularGrid::number_of_neighbors(int local_node_index) const
 {
-    assert(node_index >= 0);
-    assert(node_index < number_of_nodes());
-    node_index = partition_.to_global_index(node_index, partition_.process());
-    MultiIndex node = single_to_multiindex(node_index, node_count_per_dimension_);
+    assert(local_node_index >= 0);
+    assert(local_node_index < partition_.local_size());
+    int node_index = partition_.to_global_index(local_node_index);
+    MultiIndex node = global_single_to_multiindex(node_index);
     int boundary_type = 0;
     for(int i = 0; i < space_dimension; i++)
     {
@@ -107,12 +135,11 @@ int RegularGrid::number_of_neighbors(int node_index) const
 
 int RegularGrid::neighbors_of(int local_node_index, std::array<std::pair<int, int>, space_dimension>& neighbors) const
 {
-    int node_index = local_node_index;
-    assert(node_index >= 0);
-    assert(node_index < number_of_nodes());
+    assert(local_node_index >= 0);
+    assert(local_node_index < partition_.local_size());
 
-    node_index = partition_.to_global_index(node_index, partition_.process());
-    MultiIndex node = single_to_multiindex(node_index, node_count_per_dimension_);
+    int node_index = partition_.to_global_index(local_node_index);
+    MultiIndex node = global_single_to_multiindex(node_index);
     MultiIndex neighbor_before;
     MultiIndex neighbor_after;
     for(int i = 0; i < space_dimension; i++)
@@ -122,33 +149,32 @@ int RegularGrid::neighbors_of(int local_node_index, std::array<std::pair<int, in
         if(node[i] == 0)
         {
             neighbor_after[i] += 1;
-            neighbors[i] = std::make_pair(-1, multi_to_single_index(neighbor_after, node_count_per_dimension_));
+            neighbors[i] = std::make_pair(-1, global_multi_to_singleindex(neighbor_after));
         }
         else if(node[i] == node_count_per_dimension_[i] - 1)
         {
             neighbor_before[i] -= 1;
-            neighbors[i] = std::make_pair(multi_to_single_index(neighbor_before, node_count_per_dimension_), -1);
+            neighbors[i] = std::make_pair(global_multi_to_singleindex(neighbor_before), -1);
         }
         else
         {
             neighbor_after[i] += 1;
-            int dist = multi_to_single_index(neighbor_after, node_count_per_dimension_) - node_index;
+            int dist = global_multi_to_singleindex(neighbor_after) - node_index;
             neighbors[i] = std::make_pair(node_index - dist, node_index + dist);
         }
     }
-    return number_of_neighbors(node_index);
+    return number_of_neighbors(local_node_index);
 }
 
 bool RegularGrid::is_boundary_node(int global_node_index) const
 {
-    int node_index = global_node_index;
-    assert(node_index >= 0);
-    assert(node_index < number_of_nodes());
+    assert(global_node_index >= 0);
+    assert(global_node_index < number_of_nodes());
     bool result = false;
-    MultiIndex node = single_to_multiindex(node_index, node_count_per_dimension_);
+    MultiIndex global_multi_index = global_single_to_multiindex(global_node_index); 
     for(int i = 0; i < space_dimension; i++)
     {
-        if(node[i] == 0 || node[i] == node_count_per_dimension_[i] - 1)
+        if(global_multi_index[i] == 0 || global_multi_index[i] == node_count_per_dimension_[i]-1)
         {
             result = true;
             break;
@@ -159,11 +185,10 @@ bool RegularGrid::is_boundary_node(int global_node_index) const
 
 Point RegularGrid::node_coordinates(int global_node_index) const
 {
-    int node_index = global_node_index;
-    assert(node_index >= 0);
-    assert(node_index < number_of_nodes());
+    assert(global_node_index >= 0);
+    assert(global_node_index < number_of_nodes());
 
-    MultiIndex node = single_to_multiindex(node_index, node_count_per_dimension_);
+    MultiIndex node = global_single_to_multiindex(global_node_index);
     Point result = Point();
     for(int i = 0; i < space_dimension; i++)
     {
@@ -176,12 +201,12 @@ scalar_t RegularGrid::node_neighbor_distance(int local_node_index, int neighbor_
 {
     int node_index = local_node_index;
     assert(node_index >= 0);
-    assert(node_index < number_of_nodes());
+    assert(node_index < partition_.local_size());
     assert(neighbor_direction >= 0);
     assert(neighbor_direction < space_dimension);
     int i = (int)neighbor_succession;
-    node_index = partition_.to_global_index(node_index, partition_.process());
-    MultiIndex node = single_to_multiindex(node_index, node_count_per_dimension_);
+    node_index = partition_.to_global_index(node_index);
+    MultiIndex node = global_single_to_multiindex(node_index);
     if(node[neighbor_direction] == 0 + i * node_count_per_dimension_[neighbor_direction])
         return -1;
     else
@@ -194,19 +219,9 @@ const ContiguousParallelPartition& RegularGrid::partition() const
     return partition_;
 }
 
-MultiIndex RegularGrid::processes_per_dimension() const     //
+MultiIndex RegularGrid::processes_per_dimension() const     
 {
-    MultiIndex processes_per_dim(space_dimension);
-    int coords[space_dimension];
-    int global_size = partition_.global_size();
-    int last_process = partition_.owner_process(global_size - 1);
-    MPI_Cart_coords(partition_.communicator(), last_process, space_dimension, coords);
-    for(int i = 0; i < space_dimension; i++)
-    {
-        processes_per_dim[i] = coords[i] + 1;
-    }
-
-    return processes_per_dim;
+    return process_per_dim_;
 }
 
 MultiIndex RegularGrid::local_process_coordinates() const
@@ -227,49 +242,96 @@ MultiIndex RegularGrid::global_node_count_per_dimension() const
 }
 
 MultiIndex RegularGrid::node_count_per_dimension() const
-{
-    int last_local_index = partition_.local_size() - 1;
-    int global_index = partition_.to_global_index(last_local_index);
-    MultiIndex process_max_corner = single_to_multiindex(global_index, node_count_per_dimension_);
-    MultiIndex node_count_per_dimension(space_dimension);
-
-    global_index = partition_.to_global_index(0);
-    MultiIndex process_min_corner = single_to_multiindex(global_index, node_count_per_dimension_);
-
-    for(int i = 0; i < max_corner_.size(); i++)
-    {
-        node_count_per_dimension[i] = process_max_corner[i] - process_min_corner[i] +1 ;//* node_count_per_dimension_[i] / (max_corner_[i] - min_corner_[i]));
-    }
-    return node_count_per_dimension;
-    //int coords = local_process_coordinates();
-    //MultiIndex node_count_per_dimension();
-    //int process = partition_.process();
-    //int global_index = to_global_index(local_index);
-    /*for(int i = 0; i < max_corner_.size(); i++)
-    {
-        node_count_per_dimension[i] = //node_count_per_dimension_[i]/(max_corner_[i] - min_corner_[i]);
-    }
-    return node_count_per_dimension;*/
-   // return new_node_counts_;
+{   
+    return local_node_count_per_dimension_;
 }
 
 MultiIndex RegularGrid::node_count_per_dimension(int process_rank) const
 {
-    int last_process = partition_.owner_process(global_size - 1);
-
-    assert(last_process >= process_rank);
+    assert(partition_.owner_process(number_of_nodes()-1) >= process_rank);
     assert(process_rank >= 0);
-    int local_index = partition_.local_size(process_rank)-1;
-    int global_index = partition_.to_global_index(local_index, process_rank);
-    MultiIndex process_max_corner = single_to_multiindex(global_index, node_count_per_dimension_);
+    int coords[space_dimension];
+    MPI_Cart_coords(partition_.communicator(), process_rank, space_dimension, coords);
     MultiIndex node_count_per_dimension(space_dimension);
-    
-    global_index = partition_.to_global_index(0, process_rank);
-    MultiIndex process_min_corner = single_to_multiindex(global_index, node_count_per_dimension_);
-    
-    for(int i = 0; i < max_corner_.size(); i++)
+    for(int i = 0; i < space_dimension; i++)
     {
-        node_count_per_dimension[i] = process_max_corner[i] - process_min_corner[i]+1;// * node_count_per_dimension_[i] / (max_corner_[i] - min_corner_[i]));
+        if (coords[i] < process_per_dim_[i] -1)
+        {
+            node_count_per_dimension[i] = node_count_per_dimension_[i]/process_per_dim_[i];    
+        }
+        else
+        {
+            node_count_per_dimension[i] = node_count_per_dimension_[i] * (1-(process_per_dim_[i]-1)/process_per_dim_[i]);   
+        }
     }
     return node_count_per_dimension;
 }
+
+int RegularGrid::global_multi_to_singleindex(const MultiIndex& global_multi_index) const
+{
+    bool is_local_node = true;
+    for (int i = 0; i < space_dimension; i++)
+    {
+        assert(global_multi_index[i] >= 0);
+        assert(global_multi_index[i] < node_count_per_dimension_[i]);
+        if (global_multi_index[i] < local_min_corner_[i] || global_multi_index[i] >= local_min_corner_[i]+local_node_count_per_dimension_[i]) 
+            is_local_node = false;  
+    }
+    MultiIndex local_multi_index = MultiIndex();
+    if (is_local_node)
+    {
+        for (int i = 0; i < space_dimension; i++)
+        {
+            local_multi_index[i] = global_multi_index[i] - local_min_corner_[i];  
+        }
+        int local_index = multi_to_single_index(local_multi_index, local_node_count_per_dimension_);
+        return partition_.to_global_index(local_index);
+    }
+    else
+    {
+        int rank;
+        int coords[space_dimension];
+        for (int i = 0; i < space_dimension; i++)
+        {
+            coords[i] = global_multi_index[i]*process_per_dim_[i]/node_count_per_dimension_[i];
+            local_multi_index[i] = global_multi_index[i] - (coords[i])*(node_count_per_dimension_[i]/process_per_dim_[i]);
+        } 
+        MPI_Cart_rank(partition_.communicator(), coords, &rank); 
+        int local_index = multi_to_single_index(local_multi_index, local_node_count_per_dimension_);
+        return partition_.to_global_index(local_index,rank);
+    }
+    
+}
+
+MultiIndex RegularGrid::global_single_to_multiindex(int global_index) const
+{
+    assert(global_index > 0);
+    assert(global_index < number_of_nodes());
+    int local_index = partition_.to_local_index(global_index);
+    if (partition_.is_owned_by_local_process(global_index))
+    {
+        MultiIndex local_multi_index = single_to_multiindex(local_index, local_node_count_per_dimension_);
+        MultiIndex global_multi_index = MultiIndex();
+        for (int i = 0; i < space_dimension; i++)
+        {
+            global_multi_index[i] = local_min_corner_[i] + local_multi_index[i];  
+        }
+        return global_multi_index;
+    }
+    else
+    {
+        int rank = partition_.owner_process(global_index);
+        auto local_multi_index = single_to_multiindex(global_index - partition_.to_global_index(0,rank),node_count_per_dimension(rank));
+        MultiIndex local_min_corner = MultiIndex();
+        MultiIndex global_multi_index = MultiIndex();
+        int coordinates[space_dimension];
+        MPI_Cart_coords(partition_.communicator(), rank, space_dimension, coordinates);
+        for(int i = 0; i < space_dimension; i++)
+        {
+            global_multi_index[i] = coordinates[i] * node_count_per_dimension_[i]/process_per_dim_[i] + local_multi_index[i];  
+        }
+        return global_multi_index;
+    }    
+}
+
+

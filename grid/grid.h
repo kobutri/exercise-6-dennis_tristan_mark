@@ -94,11 +94,17 @@ public:
 
     MultiIndex node_count_per_dimension(int process_rank) const;
 
+    int global_multi_to_singleindex(const MultiIndex& a) const;
+
+    MultiIndex global_single_to_multiindex(int i) const;
+
 private:
     Point min_corner_;
     Point max_corner_;
+    MultiIndex local_min_corner_;
     MultiIndex node_count_per_dimension_;
-    MultiIndex new_node_counts_;    
+    MultiIndex local_node_count_per_dimension_;
+    MultiIndex process_per_dim_;    
     ContiguousParallelPartition partition_;
 };
 
