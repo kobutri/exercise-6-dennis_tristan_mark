@@ -30,7 +30,7 @@ find_package(pybind11 REQUIRED)
 set(linear_algebra_SOURCES
   linear_algebra/contiguousparallelpartition.cpp
   linear_algebra/exchangepattern.cpp
-)
+        linear_algebra/operations.cpp)
 
 add_library(linear_algebra ${linear_algebra_SOURCES})
 target_compile_features(linear_algebra PUBLIC cxx_std_17)
