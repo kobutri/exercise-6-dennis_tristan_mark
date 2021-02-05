@@ -11,10 +11,10 @@ public:
     virtual void setup() override
     {
         IterativeSolver<T>::setup();
-        res = Vector<T>((*(Solver<T>::A_)).rows());
-        p = Vector<T>((*(Solver<T>::A_)).rows());
-        q = Vector<T>((*(Solver<T>::A_)).rows());
-        z = Vector<T>((*(Solver<T>::A_)).rows());
+        res = Vector<T>(this->A_->row_partition());
+        p = Vector<T>(this->A_->row_partition());
+        q = Vector<T>(this->A_->row_partition());
+        z = Vector<T>(this->A_->row_partition());
     }
 
     virtual void solve(Vector<T> &x, const Vector<T> &b) override {

@@ -19,7 +19,7 @@ public:
                 }
             }
             if (diagonalElement == 0) {
-                return;
+                continue;
             } else {
                 x[i] = b[i] / diagonalElement;
             }

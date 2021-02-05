@@ -10,8 +10,8 @@ public:
     virtual void setup() override
     {
         IterativeSolver<T>::setup();
-        residuum = Vector<T>((*(Solver<T>::A_)).rows());
-        result = Vector<T>((*(Solver<T>::A_)).rows());
+        residuum = Vector<T>(this->A_->row_partition());
+        result = Vector<T>(this->A_->row_partition());
     }
 
     virtual void solve(Vector<T> &x, const Vector<T> &b) override {
