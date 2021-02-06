@@ -238,8 +238,8 @@ PYBIND11_MODULE(pmsc, mod)
         .def(
             "__setitem__", [](MultiIndex& index, int i, int value) { index[i] = value; }, py::is_operator());
 
-    mod.def("multi_to_single_index", &multi_to_single_index);
-    mod.def("single_to_multiindex", &single_to_multiindex);
+    mod.def("from_multi_index", &from_multi_index);
+    mod.def("to_multi_index", &to_multi_index);
 
     py::class_<Point>(mod, "Point")
         .def(py::init<>())

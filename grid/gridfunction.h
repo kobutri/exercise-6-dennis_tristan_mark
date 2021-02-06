@@ -32,7 +32,7 @@ public:
 
     ~GridFunction() = default;
 
-    RegularGrid grid() const {
+    const RegularGrid& grid() const {
         return *(grid_);
     }
 

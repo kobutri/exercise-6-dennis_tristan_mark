@@ -31,6 +31,7 @@ public:
 
     virtual void setup() {
         assert(set_operator_called == true);
+        A_.get()->initialize_exchange_pattern(A_.get()->row_partition());
         setup_called = true;
     }
 

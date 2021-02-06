@@ -1,3 +1,4 @@
+
 #ifndef PMSC_GRID_IO_H
 #define PMSC_GRID_IO_H
 
@@ -78,6 +79,7 @@ void write_to_vtk(const std::filesystem::path& file_path, const GridFunction<T>&
     std::ofstream master_file;
     if(is_master)
     {
+        std::cout << "num procs: " << number_of_processes << std::endl;
         master_file.open(file_path.parent_path() / master_filename);
         if(!master_file.is_open()) throw std::runtime_error("Failed to open file '" + (file_path.parent_path() / master_filename).string() + "'");
     }
@@ -162,8 +164,6 @@ void write_to_vtk(const std::filesystem::path& file_path, const GridFunction<T>&
                 }
             }
             const auto local_node_index = from_multi_index(local_node_multi_index, grid_function.grid().node_count_per_dimension());
-            std::cout << grid_function.grid().().local_sizepartition() << std::endl;
-            std::cout << partition.local_size() << std::endl;
             detail::write_point(process_file, grid_function.grid().node_coordinates(partition.to_global_index(local_node_index)));
         }
     }

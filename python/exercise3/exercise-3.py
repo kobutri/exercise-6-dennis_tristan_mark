@@ -14,26 +14,25 @@ grid = mymodule.RegularGrid(mymodule.mpi_comm_world(), mymodule.Point(0, 0), mym
 
 (matrix_, vector) = mymodule.assemble_poisson_matrix(grid, poisson_function, boundary_function) 
 
+x = mymodule.Vector(vector)
 
-# x = mymodule.Vector([0] * vector.size())
+solver = mymodule.CgSolver()
 
-# solver = mymodule.CgSolver()
+solver.set_operator(matrix_)
 
-# solver.set_operator(matrix_)
+solver.relative_tolerance(1e-15)
 
-# solver.relative_tolerance(1e-15)
-    
-# solver.max_iterations(1000)
-    
-# solver.absolute_tolerance(0.0)
+solver.max_iterations(1000)
 
-# solver.setup()
+solver.absolute_tolerance(0.0)
 
-# solver.solve(x, vector)
+solver.setup()
 
-# gridFunc =mymodule.GridFunction(grid, x)
+solver.solve(x, vector)
 
-# mymodule.write_to_vtk('./poisson_func_2', gridFunc, 'poisson_func')
+gridFunc =mymodule.GridFunction(grid, x)
+
+mymodule.write_to_vtk('./poisson_func_2', gridFunc, 'poisson_func')
         
     
 mymodule.MPI_Finalize()

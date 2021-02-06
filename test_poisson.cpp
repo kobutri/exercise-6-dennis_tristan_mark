@@ -14,6 +14,7 @@
 #include <iostream>
 #include <mpi.h>
 #include <thread>
+#include <unistd.h>
 
 scalar_t boundary(const Point& x)
 {
@@ -22,26 +23,26 @@ scalar_t boundary(const Point& x)
 
 scalar_t function(const Point& x)
 {
-    return -6 + x[0] - x[0];
+    return -6;
 }
 
 int main(int argc, char** argv)
 {
     MPI_Init(&argc, &argv);
+
     {
-        //                using namespace std::chrono_literals;
-        //                volatile int i = 0;
-        //                printf("PID %d on\n", _getpid());
-        //                fflush(stdout);
-        //                while (0 == i)
-        //                    std::this_thread::sleep_for(100ms);
+        using namespace std::chrono_literals;
+        volatile int i = 0;
+        printf("PID %d\n", getpid());
+        fflush(stdout);
+        while(i == 0)
+            std::this_thread::sleep_for(100ms);
     }
 
     RegularGrid grid(MPI_COMM_WORLD, Point(0, 0), Point(1., 1.), MultiIndex(16, 16));
     SparseMatrix<scalar_t> matrix;
     Vector<scalar_t> vector;
     std::tie(matrix, vector) = assemble_poisson_matrix<scalar_t>(grid, function, boundary);
-    matrix.initialize_exchange_pattern(matrix.row_partition());
     Vector<scalar_t> x(vector.partition());
     CgSolver<scalar_t> solver;
 
@@ -52,16 +53,6 @@ int main(int argc, char** argv)
     solver.setup();
     solver.solve(x, vector);
     GridFunction<scalar_t> gridFunction(grid, x);
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if(rank == 0)
-    {
-        //        for(int i = 0; i < grid.partition().local_size(); ++i)
-        //        {
-        //            std::cout << gridFunction.value(i) << ", ";
-        //        }
-        //        std::cout << std::endl;
-    }
 
     write_to_vtk("./poisson_func_2", gridFunction, "poisson_func");
     MPI_Finalize();
