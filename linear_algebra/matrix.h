@@ -30,7 +30,7 @@ public:
 
     SparseMatrix(const SparseMatrix& other) :
         rows_(other.rows_), columns_(other.columns_), nnz_(other.nnz_), row_partition_(other.row_partition_),
-        initialize_exchange_pattern_called(false)
+        initialize_exchange_pattern_called(other.initialize_exchange_pattern_called)
     {
         exchange_pattern_ = other.exchange_pattern_;
         //std::copy(other.A_.get(), other.A_.get() + nnz_, A_.get());
@@ -49,7 +49,7 @@ public:
         rows_(other.rows()),
         columns_(other.columns()), nnz_(other.nnz_), A_(std::move(other.A_)), JA_(std::move(other.JA_)),
         IA_(std::move(other.IA_)), row_partition_(std::move(other.row_partition_)), exchange_pattern_(other.exchange_pattern_),
-        initialize_exchange_pattern_called(false)
+        initialize_exchange_pattern_called(other.initialize_exchange_pattern_called)
     {}
 
     SparseMatrix& operator=(const SparseMatrix& other)

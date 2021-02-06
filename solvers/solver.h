@@ -25,7 +25,7 @@ public:
     virtual ~Solver() = default;
 
     virtual void set_operator(const SparseMatrix<T> &A) {
-        A_ = std::make_unique<SparseMatrix<T>>(A);
+        A_ = std::make_shared<SparseMatrix<T>>(A);
         set_operator_called = true;
     }
 
@@ -41,7 +41,7 @@ public:
     }
 
 protected:
-    std::unique_ptr<SparseMatrix<T>> A_;
+    std::shared_ptr<SparseMatrix<T>> A_;
     bool set_operator_called;
     bool setup_called;
     StopReason stop_reason;

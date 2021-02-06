@@ -7,6 +7,7 @@ RegularGrid::RegularGrid(const RegularGrid& other) :
     min_corner_(other.min_corner_),
     max_corner_(other.max_corner_),
     node_count_per_dimension_(other.node_count_per_dimension_),
+    process_per_dim_(other.process_per_dim_),
     partition_(other.partition_),
     local_min_corner_(other.local_min_corner_),
     local_node_count_per_dimension_(other.local_node_count_per_dimension_) {}
@@ -15,6 +16,7 @@ RegularGrid::RegularGrid(RegularGrid&& other) noexcept :
     min_corner_(other.min_corner_),
     max_corner_(other.max_corner_),
     node_count_per_dimension_(other.node_count_per_dimension_),
+    process_per_dim_(other.process_per_dim_),
     partition_(other.partition_),
     local_min_corner_(other.local_min_corner_),
     local_node_count_per_dimension_(other.local_node_count_per_dimension_) {}
@@ -24,7 +26,8 @@ RegularGrid::RegularGrid(Point min_corner, Point max_corner, MultiIndex node_cou
     max_corner_(max_corner),
     node_count_per_dimension_(node_count_per_dimension_),
     local_min_corner_(MultiIndex(0)),
-    local_node_count_per_dimension_(node_count_per_dimension_)
+    local_node_count_per_dimension_(node_count_per_dimension_),
+    process_per_dim_(1)
 {
     for(int i = 0; i < space_dimension; i++)
     {
@@ -307,7 +310,7 @@ int RegularGrid::global_multi_to_singleindex(const MultiIndex& global_multi_inde
         {
             local_multi_index[i] = global_multi_index[i] - local_min_corner_[i];  
         }
-        int local_index = multi_to_single_index(local_multi_index, local_node_count_per_dimension_);
+        int local_index = from_multi_index(local_multi_index, local_node_count_per_dimension_);
         return partition_.to_global_index(local_index);
     }
     else
@@ -322,7 +325,7 @@ int RegularGrid::global_multi_to_singleindex(const MultiIndex& global_multi_inde
         //change(coords);
         MPI_Cart_rank(partition_.communicator(), coords, &rank); 
         //std::cout << global_multi_index[0] << global_multi_index[1] << "coords: " << coords[0]<<coords[1]<<"rank: " << rank << "local_multi_index: " << local_multi_index[0]<<local_multi_index[1]<<"\n"<<std::flush;
-        int local_index = multi_to_single_index(local_multi_index, node_count_per_dimension(rank));
+        int local_index = from_multi_index(local_multi_index, node_count_per_dimension(rank));
         return partition_.to_global_index(local_index,rank);
     }
     
@@ -335,7 +338,7 @@ MultiIndex RegularGrid::global_single_to_multiindex(int global_index) const
     if (partition_.is_owned_by_local_process(global_index))
     {
         int local_index = partition_.to_local_index(global_index);
-        MultiIndex local_multi_index = single_to_multiindex(local_index, local_node_count_per_dimension_);
+        MultiIndex local_multi_index = to_multi_index(local_index, local_node_count_per_dimension_);
         MultiIndex global_multi_index = MultiIndex();
         for (int i = 0; i < space_dimension; i++)
         {
@@ -348,7 +351,7 @@ MultiIndex RegularGrid::global_single_to_multiindex(int global_index) const
         //std::cout << "hallo" << std::flush;
         int rank = partition_.owner_process(global_index);
         //std::cout << partition_.process() << "sagt hallo, rank: " << rank <<"\n" <<std::flush;
-        auto local_multi_index = single_to_multiindex(global_index - partition_.to_global_index(0,rank),node_count_per_dimension(rank));
+        auto local_multi_index = to_multi_index(global_index - partition_.to_global_index(0,rank),node_count_per_dimension(rank));
         MultiIndex global_multi_index = MultiIndex();
         int coordinates[space_dimension];
         MPI_Cart_coords(partition_.communicator(), rank, space_dimension, coordinates);//local_multi_index[0]<<","<<local_multi_index[1]<<","<<local_multi_index[2]

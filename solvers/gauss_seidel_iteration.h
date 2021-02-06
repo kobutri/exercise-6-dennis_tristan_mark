@@ -64,7 +64,7 @@ public:
             }
             send_[i] = x[i];
         }
-        MPI_Bcast(send_.data(), send_.size(), convert_to_MPI_TYPE<T>(), partition.process(), partition.communicator());
+        MPI_Bcast(send_.data(), static_cast<int>(send_.size()), convert_to_MPI_TYPE<T>(), partition.process(), partition.communicator());
     }
 
 private:

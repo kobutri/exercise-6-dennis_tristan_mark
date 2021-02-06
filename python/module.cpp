@@ -1,4 +1,3 @@
-
 #include "../discretization/poisson.h"
 #include "../grid/io.h"
 #include "../solvers/cg.h"
@@ -15,6 +14,32 @@
 #include <vector>
 
 #include "mpi_comm_wrapper.h"
+
+class PySolver : public Solver<scalar_t>
+{
+public:
+    using Solver<scalar_t>::Solver;
+    using Solver<scalar_t>::last_stop_reason;
+
+    void solve(Vector<scalar_t>& x, const Vector<scalar_t>& b) override
+    {
+        PYBIND11_OVERLOAD_PURE(
+            void,
+            Solver<scalar_t>,
+            solve,
+            x, b);
+    }
+
+    void set_operator(const SparseMatrix<scalar_t>& A) override
+    {
+        PYBIND11_OVERLOAD(void, Solver<scalar_t>, set_operator, A);
+    }
+
+    void setup() override
+    {
+        PYBIND11_OVERLOAD(void, Solver<scalar_t>, setup);
+    }
+};
 
 class PyIterativeSolver : public IterativeSolver<scalar_t>
 {
@@ -83,15 +108,14 @@ PYBIND11_MODULE(pmsc, mod)
         "MPI_Init", []() { MPI_Init(nullptr, nullptr); }, "Initializes MPI");
     mod.def(
         "MPI_Finalize", []() { MPI_Finalize(); }, "Finalizies MPI");
-    mod.def("MPI_COMM_WORLD", []() { return reinterpret_cast<const void*>(&comm_world); });
 
     py::class_<Vector<scalar_t>>(mod, "Vector")
         .def(py::init<>())
         .def(py::init<const Vector<scalar_t>&>(), py::arg("other"))
         .def(py::init<int>(), py::arg("size"))
         .def(py::init<const std::vector<scalar_t>&>(), py::arg("values"))
-        .def(py::init([](const void* comm, const std::vector<scalar_t>& values) {
-                 return Vector<scalar_t>(*reinterpret_cast<const MPI_Comm*>(comm), values);
+        .def(py::init([](MpiCommWrapper comm, const std::vector<scalar_t>& values) {
+                 return Vector<scalar_t>(comm, values);
              }),
              py::arg("communicator"), py::arg("values"))
         .def("__getitem__", static_cast<scalar_t& (Vector<scalar_t>::*)(int)>(&Vector<scalar_t>::operator[]),
@@ -108,15 +132,15 @@ PYBIND11_MODULE(pmsc, mod)
              py::arg("nz_per_row"))
         .def(py::init<int, int, const std::vector<SparseMatrix<scalar_t>::triplet_type>&>(), py::arg("rows"),
              py::arg("columns"), py::arg("entries"))
-        .def(py::init([](const void* comm, int local_rows, int global_columns, std::function<int(int)> nz_per_row) {
-                 return SparseMatrix<scalar_t>(*reinterpret_cast<const MPI_Comm*>(comm), local_rows, global_columns,
+        .def(py::init([](MpiCommWrapper comm, int local_rows, int global_columns, std::function<int(int)> nz_per_row) {
+                 return SparseMatrix<scalar_t>(comm, local_rows, global_columns,
                                                std::move(nz_per_row));
              }),
              py::arg("communicator"),
              py::arg("local_rows"), py::arg("global_columns"), py::arg("nz_per_row"))
-        .def(py::init([](const void* comm, int local_rows, int global_columns,
+        .def(py::init([](MpiCommWrapper comm, int local_rows, int global_columns,
                          const std::vector<SparseMatrix<scalar_t>::triplet_type>& entries) {
-                 return SparseMatrix<scalar_t>(*reinterpret_cast<const MPI_Comm*>(comm), local_rows, global_columns,
+                 return SparseMatrix<scalar_t>(comm, local_rows, global_columns,
                                                entries);
              }),
              py::arg("communicator"),
@@ -234,7 +258,14 @@ PYBIND11_MODULE(pmsc, mod)
         .def(py::init<const RegularGrid&>(), py::arg("other"))
         .def(py::init<Point, Point, MultiIndex>(), py::arg("min_corner"), py::arg("max_corner"),
              py::arg("node_count_per_dimension"))
-        .def("node_count_per_dimension", &RegularGrid::node_count_per_dimension)
+        .def(py::init(
+                 [](MpiCommWrapper communicator, Point min_corner, Point max_corner, MultiIndex global_node_count_per_dimension) {
+                     return RegularGrid(communicator, min_corner, max_corner, global_node_count_per_dimension);
+                 }),
+             py::arg("communicator"), py::arg("min_corner"), py::arg("max_corner"),
+             py::arg("node_count_per_dimension"))
+        .def("node_count_per_dimension", py::overload_cast<>(&RegularGrid::node_count_per_dimension, py::const_))
+        .def("node_count_per_dimension", py::overload_cast<int>(&RegularGrid::node_count_per_dimension, py::const_))
         .def("number_of_nodes", &RegularGrid::number_of_nodes)
         .def("number_of_inner_nodes", &RegularGrid::number_of_inner_nodes)
         .def("number_of_boundary_nodes", &RegularGrid::number_of_boundary_nodes)
@@ -243,7 +274,12 @@ PYBIND11_MODULE(pmsc, mod)
         .def("is_boundary_node", &RegularGrid::is_boundary_node, py::arg("node_index"))
         .def("node_coordinates", &RegularGrid::node_coordinates, py::arg("node_index"))
         .def("node_neighbor_distance", &RegularGrid::node_neighbor_distance, py::arg("node_index"),
-             py::arg("neighbor_direction"), py::arg("neighbor_succession"));
+             py::arg("neighbor_direction"), py::arg("neighbor_succession"))
+        .def("processes_per_dimension", &RegularGrid::processes_per_dimension)
+        .def("local_process_coordinates", &RegularGrid::local_process_coordinates)
+        .def("global_node_count_per_dimension", &RegularGrid::global_node_count_per_dimension)
+        .def("global_multi_to_singleindex", &RegularGrid::global_multi_to_singleindex, py::arg("a"))
+        .def("global_single_to_multiindex", &RegularGrid::global_single_to_multiindex, py::arg("i"));
 
     py::class_<GridFunction<scalar_t>>(mod, "GridFunction")
         .def(py::init<RegularGrid&, scalar_t>())
@@ -253,10 +289,7 @@ PYBIND11_MODULE(pmsc, mod)
         .def("value", &GridFunction<scalar_t>::value);
 
     mod.def(
-        "write_to_vtk", [](const std::string& path, const RegularGrid& grid) { write_to_vtk(path, grid); },
-        py::arg("file_path"), py::arg("grid"));
-    mod.def(
-        "write_to_vkt2", [](const std::string& path, const GridFunction<scalar_t>& grid_function, const std::string& name) { write_to_vtk(path, grid_function, name); },
+        "write_to_vtk", [](const std::string& path, const GridFunction<scalar_t>& grid_function, const std::string& name) { write_to_vtk(path, grid_function, name); },
         py::arg("file_path"), py::arg("grid_function"), py::arg("name"));
 
     mod.def("assemble_poisson_matrix", &assemble_poisson_matrix<scalar_t>, py::arg("grid"), py::arg("rhs_function"),

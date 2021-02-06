@@ -58,7 +58,7 @@ int& MultiIndex::operator[](int i)
     return data_[i];
 }
 
-int multi_to_single_index(const MultiIndex& a, const MultiIndex n)
+int from_multi_index(const MultiIndex& a, const MultiIndex n)
 {
     assert(space_dimension == a.size());
     int ret = 0;
@@ -74,7 +74,7 @@ int multi_to_single_index(const MultiIndex& a, const MultiIndex n)
     return ret;
 }
 
-MultiIndex single_to_multiindex(int i, const MultiIndex n)
+MultiIndex to_multi_index(int i, const MultiIndex n)
 {
     assert(space_dimension > 0 && space_dimension <= 3);
     if constexpr(space_dimension == 1)

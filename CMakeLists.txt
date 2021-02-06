@@ -85,6 +85,10 @@ pybind11_add_module(pmsc ${python_module_SOURCES})
 target_compile_options(pmsc PRIVATE ${PMSC_PRIVATE_COMPILE_OPTIONS})
 target_link_libraries(pmsc PRIVATE linear_algebra solvers grid_2d)
 
+add_executable(test_poisson test_poisson.cpp)
+target_compile_options(test_poisson PRIVATE ${PMSC_PRIVATE_COMPILE_OPTIONS})
+target_link_libraries(test_poisson PRIVATE linear_algebra solvers grid_2d)
+
 # =======
 # TESTS
 
