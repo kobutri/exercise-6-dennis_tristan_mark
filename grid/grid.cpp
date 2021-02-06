@@ -263,6 +263,9 @@ MultiIndex RegularGrid::node_count_per_dimension(int process_rank) const
 
 int RegularGrid::global_multi_to_singleindex(const MultiIndex& global_multi_index) const
 {
+    if(partition_.local_size() == partition_.global_size()) {
+        return from_multi_index(global_multi_index, node_count_per_dimension_);
+    }
     int process_coords[space_dimension];
     MultiIndex local_multi_index(space_dimension);
     for(int i = 0; i < space_dimension; ++i)
@@ -281,6 +284,9 @@ int RegularGrid::global_multi_to_singleindex(const MultiIndex& global_multi_inde
 
 MultiIndex RegularGrid::global_single_to_multiindex(int global_index) const
 {
+    if(partition_.global_size() == partition_.local_size()) {
+        return to_multi_index(global_index, node_count_per_dimension_);
+    }
     assert(global_index >= 0);
     assert(global_index < number_of_nodes());
     int rank = partition_.owner_process(global_index);
