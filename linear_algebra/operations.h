@@ -82,7 +82,6 @@ void subtract(Vector<T>& result, const Vector<T>& lhs, const Vector<T>& rhs)
 template<typename T>
 MPI_Datatype convert_to_MPI_TYPE();
 
-
 template<typename T>
 T dot_product(const Vector<T>& lhs, const Vector<T>& rhs)
 {
@@ -122,14 +121,14 @@ void multiply(Vector<T>& result, const SparseMatrix<T>& lhs,
             result[i] = 0;
             for(int j = 0; j < lhs.row_nz_size(i); j++)
             {
-                result[i] += lhs.row_nz_entry(i, j) * rhs[lhs.row_nz_index(i,j)];
+                result[i] += lhs.row_nz_entry(i, j) * rhs[lhs.row_nz_index(i, j)];
             }
         }
     }
     else
     {
         ExchangePattern ex_pattern = lhs.exchange_pattern();
-        ExchangeData<T> ex_data = exchange_vector_data(ex_pattern,rhs);
+        ExchangeData<T> ex_data = exchange_vector_data(ex_pattern, rhs);
         ContiguousParallelPartition partition = lhs.row_partition();
         if(result.size() != lhs.rows())
         {
@@ -140,19 +139,17 @@ void multiply(Vector<T>& result, const SparseMatrix<T>& lhs,
             result[i] = 0;
             for(int j = 0; j < lhs.row_nz_size(i); j++)
             {
-                if (partition.is_owned_by_local_process(lhs.row_nz_index(i,j)))
+                if(partition.is_owned_by_local_process(lhs.row_nz_index(i, j)))
                 {
-                    result[i] += lhs.row_nz_entry(i, j) * rhs[partition.to_local_index(lhs.row_nz_index(i,j))];
+                    result[i] += lhs.row_nz_entry(i, j) * rhs[partition.to_local_index(lhs.row_nz_index(i, j))];
                 }
                 else
                 {
-                    result[i] += lhs.row_nz_entry(i, j) * ex_data.get(partition.owner_process(lhs.row_nz_index(i,j)),lhs.row_nz_index(i,j));
+                    result[i] += lhs.row_nz_entry(i, j) * ex_data.get(partition.owner_process(lhs.row_nz_index(i, j)), lhs.row_nz_index(i, j));
                 }
             }
         }
     }
-
-
 }
 
 template<typename T>
