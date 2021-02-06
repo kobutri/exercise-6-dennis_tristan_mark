@@ -14,7 +14,7 @@
 #include <iostream>
 #include <mpi.h>
 #include <thread>
-#include <unistd.h>
+#include <process.h>
 
 scalar_t boundary(const Point& x)
 {
@@ -23,7 +23,7 @@ scalar_t boundary(const Point& x)
 
 scalar_t function(const Point& x)
 {
-    return -6;
+    return -6 + x[0] - x[0];
 }
 
 int main(int argc, char** argv)
@@ -31,12 +31,12 @@ int main(int argc, char** argv)
     MPI_Init(&argc, &argv);
 
     {
-        using namespace std::chrono_literals;
-        volatile int i = 0;
-        printf("PID %d\n", getpid());
-        fflush(stdout);
-        while(i == 0)
-            std::this_thread::sleep_for(100ms);
+//        using namespace std::chrono_literals;
+//        volatile int i = 0;
+//        printf("PID %d\n", _getpid());
+//        fflush(stdout);
+//        while(i == 0)
+//            std::this_thread::sleep_for(100ms);
     }
 
     RegularGrid grid(MPI_COMM_WORLD, Point(0, 0), Point(1., 1.), MultiIndex(16, 16));

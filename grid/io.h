@@ -79,7 +79,6 @@ void write_to_vtk(const std::filesystem::path& file_path, const GridFunction<T>&
     std::ofstream master_file;
     if(is_master)
     {
-        std::cout << "num procs: " << number_of_processes << std::endl;
         master_file.open(file_path.parent_path() / master_filename);
         if(!master_file.is_open()) throw std::runtime_error("Failed to open file '" + (file_path.parent_path() / master_filename).string() + "'");
     }
