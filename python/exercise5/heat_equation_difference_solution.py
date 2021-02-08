@@ -50,7 +50,7 @@ for i in range(1, 11):
     
     gridFunc = mymodule.GridFunction(grid, solution)
 
-    mymodule.write_to_vtk('./heat_timesteps_solution' + str(i), gridFunc, 'heat_timesteps_solution' )
+    mymodule.write_to_vtk('./output/heat_timesteps_solution' + str(i), gridFunc, 'heat_timesteps_solution' )
     
     t+= 2/10
     
