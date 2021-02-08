@@ -3,14 +3,14 @@
 
 #include <array>
 #include <memory>
-#include <utility>
 #include <mpi.h>
+#include <utility>
 #include <vector>
 
 #include "../common/space_dimension.h"
+#include "../linear_algebra/contiguousparallelpartition.h"
 #include "multiindex.h"
 #include "point.h"
-#include "../linear_algebra/contiguousparallelpartition.h"
 
 enum class NeighborSuccession
 {
@@ -104,7 +104,7 @@ private:
     MultiIndex local_min_corner_;
     MultiIndex node_count_per_dimension_;
     MultiIndex local_node_count_per_dimension_;
-    MultiIndex process_per_dim_;    
+    MultiIndex process_per_dim_;
     ContiguousParallelPartition partition_;
     void change(int coords[]) const;
 };

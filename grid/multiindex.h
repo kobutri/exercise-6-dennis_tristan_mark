@@ -43,8 +43,8 @@ private:
     int data_[space_dimension];
 };
 
-int multi_to_single_index(const MultiIndex& a, const MultiIndex n);
+int from_multi_index(const MultiIndex& a, const MultiIndex n);
 
-MultiIndex single_to_multiindex(int i, const MultiIndex n);
+MultiIndex to_multi_index(int i, const MultiIndex n);
 
 #endif // PMSC_MULTIINDEX_H
