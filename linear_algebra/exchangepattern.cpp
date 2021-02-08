@@ -111,30 +111,3 @@ bool entry_in_vector(std::vector<int>& vector, int value)
     }
     return false;
 }
-
-void bubblesort(std::vector<int>& vector)
-{
-    unsigned int position = 0;
-    unsigned int position_2;
-    while(position < vector.size() - 1)
-    {
-        if(vector[position] > vector[position + 1])
-        {
-            std::swap(vector[position], vector[position + 1]);
-        }
-        position_2 = position;
-        while(position_2 >= 1)
-        {
-            if(vector[position_2] < vector[position_2 - 1])
-            {
-                std::swap(vector[position_2], vector[position_2 - 1]);
-                position_2 -= 1;
-            }
-            else
-            {
-                break;
-            }
-        }
-        position += 1;
-    }
-}
