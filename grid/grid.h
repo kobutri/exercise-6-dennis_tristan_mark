@@ -12,22 +12,20 @@
 #include "multiindex.h"
 #include "point.h"
 
-enum class NeighborSuccession
-{
+enum class NeighborSuccession {
     predecessor,
     successor
 };
 
-class RegularGrid
-{
+class RegularGrid {
 public:
     using triplet_type = std::tuple<scalar_t, scalar_t, int>;
 
     RegularGrid() = default;
 
-    RegularGrid(const RegularGrid& other);
+    RegularGrid(const RegularGrid &other);
 
-    RegularGrid(RegularGrid&& other) noexcept;
+    RegularGrid(RegularGrid &&other) noexcept;
 
     RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corner, MultiIndex global_node_count_per_dimension);
 
@@ -65,7 +63,7 @@ public:
     //!                   should be -1 at that location.
     //!
     //! \returns The number of neighbors the given node has.
-    int neighbors_of(int local_node_index, std::array<std::pair<int, int>, space_dimension>& neighbors) const;
+    int neighbors_of(int local_node_index, std::array<std::pair<int, int>, space_dimension> &neighbors) const;
 
     //! Returns true if the node with the given index is located at the boundary of the domain.
     bool is_boundary_node(int global_node_index) const;
@@ -82,7 +80,7 @@ public:
     scalar_t
     node_neighbor_distance(int local_node_index, int neighbor_direction, NeighborSuccession neighbor_succession) const;
 
-    const ContiguousParallelPartition& partition() const;
+    const ContiguousParallelPartition &partition() const;
 
     MultiIndex processes_per_dimension() const;
 
@@ -94,7 +92,7 @@ public:
 
     MultiIndex node_count_per_dimension(int process_rank) const;
 
-    int global_multi_to_singleindex(const MultiIndex& a) const;
+    int global_multi_to_singleindex(const MultiIndex &a) const;
 
     MultiIndex global_single_to_multiindex(int i) const;
 
@@ -106,6 +104,7 @@ private:
     MultiIndex local_node_count_per_dimension_;
     MultiIndex process_per_dim_;
     ContiguousParallelPartition partition_;
+
     void change(int coords[]) const;
 };
 
