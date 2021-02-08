@@ -1,4 +1,5 @@
 #include "../discretization/poisson.h"
+#include "../discretization/error.h"
 #include "../grid/io.h"
 #include "../solvers/cg.h"
 #include "../solvers/gauss_seidel_iteration.h"
@@ -304,6 +305,8 @@ PYBIND11_MODULE(pmsc, mod)
          { return assemble_heat_matrix(grid, previous_temperature, t, delta_t, rhs_function, boundary_function); }, 
          py::arg("grid"), py::arg("previous_temperature"), py::arg("t"), py::arg("delta_t"), py::arg("rhs_function"),
         py::arg("boundary_function"));
+
+     mod.def("compute_l_infinity_error", &compute_l_infinity_error<scalar_t>, py::arg("grid"), py::arg("computed_solution"), py::arg("analytical_solution"));
 
      mod.def(
          "to_global_index", [](const Vector<scalar_t>& vector, int local_index) { return (vector.partition()).to_global_index(local_index); },
