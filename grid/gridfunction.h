@@ -43,9 +43,11 @@ public:
         return *(grid_);
     }
 
-    T value(int node_index) const
+    T value(int local_node_index) const
     {
-        return values_[node_index];
+        assert(local_node_index >= 0);
+        assert(local_node_index < grid_->partition().local_size());
+        return values_[local_node_index];
     }
 
 private:
