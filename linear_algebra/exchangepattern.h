@@ -4,6 +4,7 @@
 #include "contiguousparallelpartition.h"
 #include <iostream>
 #include <utility>
+#include <algorithm>
 
 template<typename T>
 class SparseMatrix;
@@ -34,8 +35,6 @@ private:
     std::vector<std::vector<int>> _receive_indices;
     std::vector<std::vector<int>> _send_indices;
 };
-
-void bubblesort(std::vector<int>& vector);
 
 bool entry_in_vector(std::vector<int>&, int value);
 
@@ -84,25 +83,12 @@ create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelP
     std::vector<std::vector<int>> send_indices_2;
     for(unsigned int i = 0; i < neighboring_processes_2.size(); i++)
     {
-        bubblesort(receive_indices[neighboring_processes_2[i]]);
-        bubblesort(send_indices[neighboring_processes_2[i]]);
+        std::sort(receive_indices[neighboring_processes_2[i]].begin(), receive_indices[neighboring_processes_2[i]].end());
+        std::sort(send_indices[neighboring_processes_2[i]].begin(), send_indices[neighboring_processes_2[i]].end());
         receive_indices_2.push_back(receive_indices[neighboring_processes_2[i]]);
         send_indices_2.push_back(send_indices[neighboring_processes_2[i]]);
     }
-    //
-    /*for(int i = 0; i < matrix.rows(); i++)
-    {
-        std::cout << "Zeile " << i << "  :  ";
-        for(int j = 0; j < matrix.row_nz_size(i); i++)
-        {
-            std::cout << "    Spalte  " << matrix.row_nz_index(i, j) << "  :  " << matrix.row_nz_entry(i, j);
-        }
-        std::cout << "\n";
-    }*/
-    //
-    //std::cout << "vorher \n ";
     ExchangePattern exchange_pattern(neighboring_processes_2, receive_indices_2, send_indices_2);
-    //std::cout << " nachher\n";
     return exchange_pattern;
 }
 

@@ -16,6 +16,7 @@ public:
 
     virtual void solve(Vector<T> &x, const Vector<T> &b) override {
         assert(Solver<T>::setup_called == true);
+        this->A_.get()->initialize_exchange_pattern(this->A_.get()->row_partition());
         int i = 0;
 
         calc_res(residuum, *(Solver<T>::A_), x, b);
