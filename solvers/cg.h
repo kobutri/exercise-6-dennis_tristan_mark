@@ -19,6 +19,7 @@ public:
 
     virtual void solve(Vector<T> &x, const Vector<T> &b) override {
         assert(Solver<T>::setup_called == true);
+        this->A_.get()->initialize_exchange_pattern(this->A_.get()->row_partition());
         T norm_r0, norm_res, a, beta, sc_product_res, sc_product_res2;
         int k = 0;
         calc_res(res, *(Solver<T>::A_), x, b);
