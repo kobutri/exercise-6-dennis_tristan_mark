@@ -288,10 +288,24 @@ PYBIND11_MODULE(pmsc, mod)
         .def("grid", &GridFunction<scalar_t>::grid)
         .def("value", &GridFunction<scalar_t>::value);
 
+
+
     mod.def(
         "write_to_vtk", [](const std::string& path, const GridFunction<scalar_t>& grid_function, const std::string& name) { write_to_vtk(path, grid_function, name); },
         py::arg("file_path"), py::arg("grid_function"), py::arg("name"));
 
     mod.def("assemble_poisson_matrix", &assemble_poisson_matrix<scalar_t>, py::arg("grid"), py::arg("rhs_function"),
             py::arg("boundary_function"));
+
+     mod.def(
+        "assemble_heat_matrix", [](const RegularGrid& grid, const GridFunction<scalar_t>& previous_temperature, const scalar_t t, const scalar_t delta_t, 
+            const std::function<scalar_t(const Point&, const scalar_t)>& rhs_function, 
+            const std::function<scalar_t(const Point&, const scalar_t)>& boundary_function) 
+         { return assemble_heat_matrix(grid, previous_temperature, t, delta_t, rhs_function, boundary_function); }, 
+         py::arg("grid"), py::arg("previous_temperature"), py::arg("t"), py::arg("delta_t"), py::arg("rhs_function"),
+        py::arg("boundary_function"));
+
+     mod.def(
+         "to_global_index", [](const Vector<scalar_t>& vector, int local_index) { return (vector.partition()).to_global_index(local_index); },
+         py::arg("Vector"), py::arg("local_index"));
 }
