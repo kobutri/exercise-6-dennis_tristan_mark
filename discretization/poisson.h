@@ -117,7 +117,7 @@ std::pair<SparseMatrix<T>, Vector<T>> assemble_heat_matrix(const RegularGrid& gr
         int i_global = partition.to_global_index(i);
         for(int j = 0; j < Matrix.row_nz_size(i); j++)
         {
-            if(i == Matrix.row_nz_index(i, j) && grid.is_boundary_node(i_global) == false)
+            if(i_global == Matrix.row_nz_index(i, j) && grid.is_boundary_node(i_global) == false)
             {
                 Matrix.row_nz_entry(i, j) += 1 / delta_t;
             }
