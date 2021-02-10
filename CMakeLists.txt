@@ -89,6 +89,10 @@ pybind11_add_module(pmsc_3d ${python_module_SOURCES})
 target_compile_options(pmsc_3d PRIVATE ${PMSC_PRIVATE_COMPILE_OPTIONS})
 target_link_libraries(pmsc_3d PRIVATE linear_algebra solvers grid_3d)
 
+add_executable(error_3d error_3d.cpp)
+target_compile_options(error_3d PUBLIC ${PMSC_PRIVATE_COMPILE_OPTIONS})
+target_link_libraries(error_3d PUBLIC linear_algebra solvers grid_2d)
+
 # =======
 # TESTS
 

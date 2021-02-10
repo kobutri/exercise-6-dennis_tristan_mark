@@ -143,7 +143,7 @@ void multiply(Vector<T>& result, const SparseMatrix<T>& lhs,
                 {
                     result[i] += lhs.row_nz_entry(i, j) * rhs[partition.to_local_index(lhs.row_nz_index(i, j))];
                 }
-                else
+                else if(lhs.row_nz_entry(i, j) != 0)
                 {
                     result[i] += lhs.row_nz_entry(i, j) * ex_data.get(partition.owner_process(lhs.row_nz_index(i, j)), lhs.row_nz_index(i, j));
                 }

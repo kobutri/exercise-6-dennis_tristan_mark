@@ -47,7 +47,6 @@ private:
 template<typename T>
 ExchangeData<T> exchange_vector_data(const ExchangePattern& exchange_pattern, const Vector<T>& vector)
 {
-
     ContiguousParallelPartition partition = vector.partition();
     std::vector<std::vector<int>> receive_indices = exchange_pattern.receive_indices();
     std::vector<std::vector<int>> send_indices = exchange_pattern.send_indices();
