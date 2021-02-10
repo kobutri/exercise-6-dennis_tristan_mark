@@ -49,7 +49,7 @@ def inverse(x):
 plt.plot(x,y) 
 plt.xlabel("h", family='serif', color='r',weight='normal', size = 16,labelpad = 6)
 plt.ylabel("l_infinity_error", family='serif', color='b',weight='normal', size = 16,labelpad = 6)
-#plt.yscale('function', functions=(forward,inverse))
+plt.yscale('function', functions=(forward,inverse))
 plt.show()
 
 pmsc.MPI_Finalize()
