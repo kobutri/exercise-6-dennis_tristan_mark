@@ -17,15 +17,15 @@ template<typename T>
 class Solver {
 public:
     Solver() :
-        A_(nullptr),
-        set_operator_called(false),
-        setup_called(false),
-        stop_reason(StopReason::unknown) {}
+            A_(nullptr),
+            set_operator_called(false),
+            setup_called(false),
+            stop_reason(StopReason::unknown) {}
 
     virtual ~Solver() = default;
 
-    virtual void set_operator(const SparseMatrix<T> &A) {
-        A_ = std::make_shared<SparseMatrix<T>>(A);
+    virtual void set_operator(std::shared_ptr<SparseMatrix<T>> A) {
+        A_ = A;
         set_operator_called = true;
     }
 
@@ -51,13 +51,13 @@ template<typename T>
 class IterativeSolver : public Solver<T> {
 public:
     IterativeSolver() :
-        Solver<T>::Solver(),
-        preconditioner_(nullptr),
-        iteration_limit(std::nullopt),
-        abs_tolerance(0),
-        rel_tolerance(std::nullopt) {}
+            Solver<T>::Solver(),
+            preconditioner_(nullptr),
+            iteration_limit(std::nullopt),
+            abs_tolerance(0),
+            rel_tolerance(std::nullopt) {}
 
-    virtual void set_operator(const SparseMatrix<T> &A) override {
+    virtual void set_operator(std::shared_ptr<SparseMatrix<T>> A) override {
         Solver<T>::set_operator(A);
         if (preconditioner_ != nullptr) (*(preconditioner_)).set_operator(A);
     }
@@ -69,7 +69,7 @@ public:
 
     void set_preconditioner(std::shared_ptr<Preconditioner<T>> preconditioner) {
         preconditioner_ = std::move(preconditioner);
-        if (Solver<T>::set_operator_called == true) (*(preconditioner_)).set_operator(*(Solver<T>::A_));
+        if (Solver<T>::set_operator_called == true) (*(preconditioner_)).set_operator((Solver<T>::A_));
     }
 
     void max_iterations(std::optional<int> value) {

@@ -56,6 +56,7 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
     MPI_Dims_create(size, space_dimension, process_per_dim);
     for (int i = 0; i < space_dimension; i++) {
         process_per_dim_[i] = process_per_dim[space_dimension-i-1];
+        assert(process_per_dim_[i] <= global_node_count_per_dimension[i]);
     }
     MPI_Comm new_communicator;
     MPI_Cart_create(communicator, space_dimension, process_per_dim, periods, false, &new_communicator);

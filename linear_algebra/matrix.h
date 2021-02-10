@@ -8,6 +8,8 @@
 #include <memory>
 #include <mpi.h>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 
 template<typename T>
 class SparseMatrix;
@@ -307,6 +309,39 @@ public:
     {
         assert(initialize_exchange_pattern_called == true);
         return exchange_pattern_;
+    }
+
+    void print() {
+        int rank; MPI_Comm_rank(row_partition_.communicator(), &rank);
+        int size; MPI_Comm_size(row_partition_.communicator(), &size);
+        std::vector<std::vector<T>> rows;
+        for (int i = 0; i < rows_; ++i) {
+            std::vector<T> row(columns(), 0);
+            for (int j = 0; j < row_nz_size(i); ++j) {
+                row[row_nz_index(i, j)] = row_nz_entry(i, j);
+            }
+            rows.push_back(row);
+        }
+        for (int i = 0; i < size; ++i) {
+            if(rank == i) {
+                std::cout << std::setprecision(2) << std::fixed;
+//                for (int j = 0; j < rows.size(); ++j) {
+//                    for (int k = 0; k < rows[j].size(); ++k) {
+//                        std::cout << rows[i][j] << " ";
+//                    }
+//                    std::cout << std::endl;
+//                }
+                for (int j = 0; j < rows_; ++j) {
+                    std::cout << "row: " << row_partition_.to_global_index(j) << " values: ";
+                    for (int k = 0; k < row_nz_size(j); ++k) {
+                        std::cout << "(" << row_nz_index(j, k) << "," << row_nz_entry(j, k) << ") ";
+                    }
+                    std::cout << std::endl;
+                }
+            } else {
+                MPI_Barrier(row_partition_.communicator());
+            }
+        }
     }
 
 private:

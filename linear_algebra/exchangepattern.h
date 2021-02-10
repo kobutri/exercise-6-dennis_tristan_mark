@@ -52,13 +52,13 @@ create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelP
     int process_size = column_partition.local_size();
     int owner_process = 0;
     int global_index;
-
+    int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     for(int i = 0; i < process_size; i++)
     {
         global_index = column_partition.to_global_index(i);
         for(int j = 0; j < matrix.row_nz_size(i); j++)
         {
-            if(column_partition.is_owned_by_local_process(matrix.row_nz_index(i, j)) == false)
+            if(column_partition.is_owned_by_local_process(matrix.row_nz_index(i, j)) == false && matrix.row_nz_entry(i, j) != 0)
             {
                 owner_process = column_partition.owner_process(matrix.row_nz_index(i, j));
                 neighboring_processes[owner_process] = 1;
@@ -71,6 +71,12 @@ create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelP
             }
         }
     }
+//    if(rank == 0) {
+//        for (int i = 0; i < neighboring_processes.size(); ++i) {
+//            std::cout << neighboring_processes[i] << ", ";
+//        }
+//        std::cout << std::endl;
+//    }
     std::vector<int> neighboring_processes_2;
     for(unsigned int i = 0; i < neighboring_processes.size(); i++)
     {
