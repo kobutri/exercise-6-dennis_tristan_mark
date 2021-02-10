@@ -45,7 +45,7 @@ inline ExchangePattern
 create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelPartition& column_partition)
 {
     int number_of_processes = column_partition.owner_process(matrix.columns() - 1) + 1;
-    std::vector<int> neighboring_processes(number_of_processes);
+    std::vector<int> neighboring_processes(number_of_processes,0);
     std::vector<std::vector<int>> receive_indices(number_of_processes);
     std::vector<std::vector<int>> send_indices(number_of_processes);
     //int process = column_partition.process();
