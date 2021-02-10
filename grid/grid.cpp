@@ -55,7 +55,7 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
     int nodes_for_first_processes;
     MPI_Dims_create(size, space_dimension, process_per_dim);
     for (int i = 0; i < space_dimension; i++) {
-        process_per_dim_[i] = process_per_dim[space_dimension-i-1];
+        process_per_dim_[i] = process_per_dim[i];
     }
     MPI_Comm new_communicator;
     MPI_Cart_create(communicator, space_dimension, process_per_dim, periods, false, &new_communicator);
@@ -72,7 +72,7 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
         for (int j = 0; j < space_dimension; j++) {
 
             nodes_counter *= global_node_count_per_dimension[j] / process_per_dim_[j] +
-                             (coordinates[space_dimension-j-1] == process_per_dim_[j] - 1 ? global_node_count_per_dimension[j] %
+                             (coordinates[j] == process_per_dim_[j] - 1 ? global_node_count_per_dimension[j] %
                                                                          process_per_dim_[j] : 0);
         }
         partition[i + 1] = partition[i] + nodes_counter;
@@ -81,7 +81,7 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
     MPI_Cart_coords(new_communicator, partition_.process(), space_dimension, coordinates);
     for (int i = 0; i < space_dimension; i++) {
         nodes_for_first_processes = global_node_count_per_dimension[i] / process_per_dim_[i];
-        local_min_corner_[i] = coordinates[space_dimension-i-1] * nodes_for_first_processes;
+        local_min_corner_[i] = coordinates[i] * nodes_for_first_processes;
     }
     local_node_count_per_dimension_ = node_count_per_dimension(partition_.process());
 }
@@ -204,7 +204,7 @@ MultiIndex RegularGrid::local_process_coordinates() const {
     MPI_Cart_coords(partition_.communicator(), partition_.process(), space_dimension, coords);
     MultiIndex coordinates(space_dimension);
     for (int i = 0; i < space_dimension; i++) {
-        coordinates[i] = coords[space_dimension-i-1];
+        coordinates[i] = coords[i];
     }
     return coordinates;
 }
@@ -225,7 +225,7 @@ MultiIndex RegularGrid::node_count_per_dimension(int process_rank) const {
     MultiIndex node_count_per_dimension(space_dimension);
     for (int j = 0; j < space_dimension; j++) {
         node_count_per_dimension[j] = node_count_per_dimension_[j] / process_per_dim_[j] +
-                                      (coords[space_dimension-j-1] == process_per_dim_[j] - 1 ? node_count_per_dimension_[j] %
+                                      (coords[j] == process_per_dim_[j] - 1 ? node_count_per_dimension_[j] %
                                                                               process_per_dim_[j] : 0);
     }
     return node_count_per_dimension;
@@ -240,10 +240,9 @@ int RegularGrid::global_multi_to_singleindex(const MultiIndex &global_multi_inde
     for (int i = 0; i < space_dimension; ++i) {
         assert(global_multi_index[i] >= 0);
         assert(global_multi_index[i] < node_count_per_dimension_[i]);
-        process_coords[space_dimension-i-1] = global_multi_index[i] / (node_count_per_dimension_[i] / process_per_dim_[i]);
-        process_coords[space_dimension-i-1] = process_coords[space_dimension-i-1] >= process_per_dim_[i] ? process_per_dim_[i] - 1 : process_coords[space_dimension-i-1];
-        local_multi_index[i] =
-                global_multi_index[i] - process_coords[space_dimension-i-1] * (node_count_per_dimension_[i] / process_per_dim_[i]);
+        process_coords[i] = global_multi_index[i] / (node_count_per_dimension_[i] / process_per_dim_[i]);
+        process_coords[i] = process_coords[i] >= process_per_dim_[i] ? process_per_dim_[i] - 1 : process_coords[i];
+        local_multi_index[i] = global_multi_index[i] - process_coords[i] * (node_count_per_dimension_[i] / process_per_dim_[i]);
     }
     int rank;
     MPI_Cart_rank(partition_.communicator(), process_coords, &rank);
@@ -264,7 +263,7 @@ MultiIndex RegularGrid::global_single_to_multiindex(int global_index) const {
     MultiIndex local_multi_index = to_multi_index(local_index, node_count_per_dimension(rank));
     MultiIndex global_multi_index(space_dimension);
     for (int i = 0; i < space_dimension; ++i) {
-        global_multi_index[i] = coords[space_dimension-i-1] * (node_count_per_dimension_[i] / process_per_dim_[i]) + local_multi_index[i];
+        global_multi_index[i] = coords[i] * (node_count_per_dimension_[i] / process_per_dim_[i]) + local_multi_index[i];
     }
     return global_multi_index;
 }
