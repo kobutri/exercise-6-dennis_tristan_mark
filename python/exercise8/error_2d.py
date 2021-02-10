@@ -22,7 +22,8 @@ def error_measure_2d(communicator, nodes_per_dim, boundary_function, poisson_fun
 
     
 def boundary_function(x):
-    return np.sin(np.pi* x[0]) * np.sin(np.pi* x[1]) 
+    return np.sin(np.pi* x[0]) * np.sin(np.pi* x[1])
+
 
 def poisson_function(x):
     return 2* np.pi**2 * np.sin(np.pi* x[0]) * np.sin(np.pi* x[1]) 
@@ -46,11 +47,12 @@ def inverse(x):
     return x**2
 
 
-plt.plot(x,y) 
-plt.xlabel("h", family='serif', color='r',weight='normal', size = 16,labelpad = 6)
-plt.ylabel("l_infinity_error", family='serif', color='b',weight='normal', size = 16,labelpad = 6)
-plt.yscale('function', functions=(forward,inverse))
-plt.show()
+if communicator.rank() == 0:
+    plt.plot(x,y)
+    plt.xlabel("h", family='serif', color='r',weight='normal', size = 16,labelpad = 6)
+    plt.ylabel("l_infinity_error", family='serif', color='b',weight='normal', size = 16,labelpad = 6)
+    plt.yscale('function', functions=(forward,inverse))
+    plt.show()
 
 pmsc.MPI_Finalize()
 

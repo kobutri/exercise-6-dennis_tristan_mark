@@ -52,12 +52,12 @@ def forward(x):
 def inverse(x):
     return x**2
 
+if communicator.rank() == 0:
+    plt.plot(x,y)
+    plt.xlabel("h", family='serif', color='r',weight='normal', size = 16,labelpad = 6)
+    plt.ylabel("l_infinity_error", family='serif', color='b',weight='normal', size = 16,labelpad = 6)
 
-plt.plot(x,y) 
-plt.xlabel("h", family='serif', color='r',weight='normal', size = 16,labelpad = 6)
-plt.ylabel("l_infinity_error", family='serif', color='b',weight='normal', size = 16,labelpad = 6)
-
-plt.yscale('function', functions=(forward,inverse))
-plt.show()
+    plt.yscale('function', functions=(forward,inverse))
+    plt.show()
 
 pmsc.MPI_Finalize()
