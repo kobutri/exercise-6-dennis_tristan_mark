@@ -81,9 +81,13 @@ set(python_module_SOURCES
         python/mpi_comm_wrapper.cpp
         )
 
-pybind11_add_module(pmsc ${python_module_SOURCES})
-target_compile_options(pmsc PRIVATE ${PMSC_PRIVATE_COMPILE_OPTIONS})
-target_link_libraries(pmsc PRIVATE linear_algebra solvers grid_2d)
+pybind11_add_module(pmsc_2d ${python_module_SOURCES})
+target_compile_options(pmsc_2d PRIVATE ${PMSC_PRIVATE_COMPILE_OPTIONS})
+target_link_libraries(pmsc_2d PRIVATE linear_algebra solvers grid_2d)
+
+pybind11_add_module(pmsc_3d ${python_module_SOURCES})
+target_compile_options(pmsc_3d PRIVATE ${PMSC_PRIVATE_COMPILE_OPTIONS})
+target_link_libraries(pmsc_3d PRIVATE linear_algebra solvers grid_3d)
 
 # =======
 # TESTS
