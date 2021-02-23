@@ -32,7 +32,7 @@ solver.solve(x, vector)
 
 gridFunc =mymodule.GridFunction(grid, x)
 
-mymodule.write_to_vtk('./poisson_func_2', gridFunc, 'poisson_func')
+mymodule.write_to_vtk('./output/poisson_func_2', gridFunc, 'poisson_func')
         
     
 mymodule.MPI_Finalize()
