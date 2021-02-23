@@ -47,7 +47,7 @@ for i in range(1,11):
 	
     gridFunc = mymodule.GridFunction(grid, x)
 
-    mymodule.write_to_vtk('./heat_timesteps_' + str(i), gridFunc, 'heat_timesteps_' )
+    mymodule.write_to_vtk('./output/heat_timesteps_' + str(i), gridFunc, 'heat_timesteps_' )
     
     phi_0 = gridFunc
         
