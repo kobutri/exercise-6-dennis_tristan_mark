@@ -4,6 +4,7 @@
 #include "contiguousparallelpartition.h"
 #include <cassert>
 #include <memory>
+#include <iomanip>
 
 template<typename T>
 class Vector
@@ -104,6 +105,20 @@ public:
     const ContiguousParallelPartition& partition() const
     {
         return partition_;
+    }
+
+    void print() const {
+        int rank; MPI_Comm_rank(partition().communicator(), &rank);
+        int size_; MPI_Comm_size(partition().communicator(), &size_);
+        std::cout << std::fixed << std::setprecision(2);
+        for (int i = 0; i < size_; ++i) {
+            if(i == rank) {
+                for (int j = 0; j < size(); ++j) {
+                    std::cout << operator[](j) << std::endl;
+                }
+            }
+            MPI_Barrier(partition().communicator());
+        }
     }
 
 private:

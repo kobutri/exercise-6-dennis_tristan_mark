@@ -316,31 +316,23 @@ public:
         int size; MPI_Comm_size(row_partition_.communicator(), &size);
         std::vector<std::vector<T>> rows;
         for (int i = 0; i < rows_; ++i) {
-            std::vector<T> row(columns(), 0);
+            std::vector<T> row(columns(), 0.);
             for (int j = 0; j < row_nz_size(i); ++j) {
                 row[row_nz_index(i, j)] = row_nz_entry(i, j);
             }
             rows.push_back(row);
         }
+        std::cout << std::fixed << std::setprecision(2);
         for (int i = 0; i < size; ++i) {
-            if(rank == i) {
-                std::cout << std::setprecision(2) << std::fixed;
-//                for (int j = 0; j < rows.size(); ++j) {
-//                    for (int k = 0; k < rows[j].size(); ++k) {
-//                        std::cout << rows[i][j] << " ";
-//                    }
-//                    std::cout << std::endl;
-//                }
+            if (rank == i) {
                 for (int j = 0; j < rows_; ++j) {
-                    std::cout << "row: " << row_partition_.to_global_index(j) << " values: ";
-                    for (int k = 0; k < row_nz_size(j); ++k) {
-                        std::cout << "(" << row_nz_index(j, k) << "," << row_nz_entry(j, k) << ") ";
+                    for (int k = 0; k < columns(); ++k) {
+                        std::cout << rows[j][k] << "\t";
                     }
                     std::cout << std::endl;
                 }
-            } else {
-                MPI_Barrier(row_partition_.communicator());
             }
+            MPI_Barrier(row_partition().communicator());
         }
     }
 
