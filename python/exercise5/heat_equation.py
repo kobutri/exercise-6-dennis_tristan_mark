@@ -17,7 +17,7 @@ grid = mymodule.RegularGrid(comm_world, mymodule.Point(0, 0), mymodule.Point(1.0
 
 phi_0 = mymodule.GridFunction(grid, start_function)
 
-mymodule.write_to_vtk('./heat_timesteps_' + str(0), phi_0, 'heat_timesteps_'  )
+mymodule.write_to_vtk('./output/heat_timesteps_' + str(0), phi_0, 'heat_timesteps_'  )
 
 t = 2/10 
 
