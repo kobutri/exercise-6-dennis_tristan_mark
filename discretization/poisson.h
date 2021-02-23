@@ -11,7 +11,7 @@
 #include <utility>
 
 template<typename T>
-std::pair<std::shared_ptr<SparseMatrix<T>>, Vector<T>> assemble_poisson_matrix(const RegularGrid &grid,
+std::pair<SparseMatrix<T>, Vector<T>> assemble_poisson_matrix(const RegularGrid &grid,
                                                               const std::function<T(const Point &)> &rhs_function,
                                                               const std::function<T(
                                                                       const Point &)> &boundary_function) {
@@ -79,7 +79,7 @@ std::pair<std::shared_ptr<SparseMatrix<T>>, Vector<T>> assemble_poisson_matrix(c
         }
     }
 
-    return std::make_pair(std::make_shared<SparseMatrix<T>>(m), b);
+    return std::make_pair(m, b);
 }
 
 template<typename T>
@@ -96,9 +96,9 @@ assemble_heat_matrix(const RegularGrid &grid, const GridFunction<T> &previous_te
 
 
     ContiguousParallelPartition partition = grid.partition();
-    std::pair<std::shared_ptr<SparseMatrix<T>>, Vector<T>> solution_poisson = assemble_poisson_matrix(grid, rhs_function_t,
+    std::pair<SparseMatrix<T>, Vector<T>> solution_poisson = assemble_poisson_matrix(grid, rhs_function_t,
                                                                                      boundary_function_t);
-    SparseMatrix<T> Matrix = *solution_poisson.first;
+    SparseMatrix<T> Matrix = solution_poisson.first;
     Vector<T> vector = solution_poisson.second;
 
     for (int i = 0; i < vector.size(); i++)  //!

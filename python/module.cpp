@@ -81,6 +81,7 @@ public:
     }
 };
 
+
 PYBIND11_MODULE(pmsc, mod) {
     mod.doc() = "PMSC python module";
 
@@ -305,13 +306,7 @@ PYBIND11_MODULE(pmsc, mod) {
             py::arg("boundary_function"));
 
     mod.def(
-            "assemble_heat_matrix",
-            [](const RegularGrid &grid, const GridFunction<scalar_t> &previous_temperature, const scalar_t t,
-               const scalar_t delta_t,
-               const std::function<scalar_t(const Point &, const scalar_t)> &rhs_function,
-               const std::function<scalar_t(const Point &, const scalar_t)> &boundary_function) {
-                return assemble_heat_matrix(grid, previous_temperature, t, delta_t, rhs_function, boundary_function);
-            },
+            "assemble_heat_matrix", &assemble_heat_matrix<scalar_t>,
             py::arg("grid"), py::arg("previous_temperature"), py::arg("t"), py::arg("delta_t"), py::arg("rhs_function"),
             py::arg("boundary_function"));
 
