@@ -33,7 +33,7 @@ std::pair<std::shared_ptr<SparseMatrix<T>>, Vector<T>> assemble_poisson_matrix(c
             b[i] = boundary_function(grid.node_coordinates(i_global));
             continue;
         }
-        b[i] = rhs_function(grid.node_coordinates(i));
+        b[i] = rhs_function(grid.node_coordinates(grid.partition().to_global_index(i)));
         T uii_sum = 0;
         for (int j = 0; j < space_dimension; ++j) {
             T h2 = grid.node_neighbor_distance(i, j, NeighborSuccession::successor);
@@ -55,7 +55,6 @@ std::pair<std::shared_ptr<SparseMatrix<T>>, Vector<T>> assemble_poisson_matrix(c
         m.row_nz_index(i, 0) = i_global;
         m.row_nz_entry(i, 0) = uii_sum;
     }
-
 
 
     for (int i = 0; i < m.rows(); ++i) {
