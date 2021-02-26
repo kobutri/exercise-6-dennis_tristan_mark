@@ -1,14 +1,19 @@
 #ifndef OPERATIONS_H
 #define OPERATIONS_H
 
-#include "../common/equals.h"
-#include "exchangedata.h"
-#include "exchangepattern.h"
 #include "matrix.h"
 #include "vector.h"
+
+#include "exchangedata.h"
+#include "exchangepattern.h"
+
+#include "../common/equals.h"
 #include <cassert>
 #include <cmath>
 #include <numeric>
+
+template<typename T>
+class SparseMatrix;
 
 template<typename T>
 bool equals(const Vector<T>& lhs, const Vector<T>& rhs)
@@ -145,7 +150,8 @@ void multiply(Vector<T>& result, const SparseMatrix<T>& lhs,
                 }
                 else if(lhs.row_nz_entry(i, j) != 0)
                 {
-                    result[i] += lhs.row_nz_entry(i, j) * ex_data.get(partition.owner_process(lhs.row_nz_index(i, j)), lhs.row_nz_index(i, j));
+                    result[i] += lhs.row_nz_entry(i, j) *
+                                 ex_data.get(partition.owner_process(lhs.row_nz_index(i, j)), lhs.row_nz_index(i, j));
                 }
             }
         }

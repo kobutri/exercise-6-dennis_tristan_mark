@@ -78,6 +78,7 @@ int ContiguousParallelPartition::to_local_index(int global_index) const
     assert(is_owned_by_local_process(global_index));
     return global_index - partition_[process_];
 }
+
 ContiguousParallelPartition::ContiguousParallelPartition(const ContiguousParallelPartition& other) :
     comm_(other.comm_),
     comm_size_(other.comm_size_),
@@ -86,12 +87,12 @@ ContiguousParallelPartition::ContiguousParallelPartition(const ContiguousParalle
     partition_ = std::make_unique<int[]>(other.comm_size_ + 1);
     std::copy(other.partition_.get(), other.partition_.get() + other.comm_size_ + 1, partition_.get());
 }
+
 ContiguousParallelPartition::ContiguousParallelPartition(ContiguousParallelPartition&& other) noexcept :
     comm_size_(other.comm_size_),
     process_(other.process_),
     comm_(other.comm_),
-    partition_(std::move(other.partition_))
-{}
+    partition_(std::move(other.partition_)) {}
 
 ContiguousParallelPartition& ContiguousParallelPartition::operator=(const ContiguousParallelPartition& other)
 {
@@ -102,6 +103,7 @@ ContiguousParallelPartition& ContiguousParallelPartition::operator=(const Contig
     std::copy(other.partition_.get(), other.partition_.get() + other.comm_size_ + 1, partition_.get());
     return *this;
 }
+
 ContiguousParallelPartition& ContiguousParallelPartition::operator=(ContiguousParallelPartition&& other) noexcept
 {
     comm_ = other.comm_;
@@ -110,6 +112,7 @@ ContiguousParallelPartition& ContiguousParallelPartition::operator=(ContiguousPa
     partition_ = std::move(other.partition_);
     return *this;
 }
+
 bool ContiguousParallelPartition::operator==(const ContiguousParallelPartition& rhs) const
 {
     if(comm_ != rhs.comm_ || comm_size_ != rhs.comm_size_ || process_ != rhs.process_)
@@ -122,6 +125,7 @@ bool ContiguousParallelPartition::operator==(const ContiguousParallelPartition& 
     }
     return true;
 }
+
 bool ContiguousParallelPartition::operator!=(const ContiguousParallelPartition& rhs) const
 {
     return !(rhs == *this);

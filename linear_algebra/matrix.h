@@ -5,19 +5,11 @@
 #include "exchangepattern.h"
 #include <cassert>
 #include <functional>
+#include <iomanip>
 #include <memory>
 #include <mpi.h>
-#include <vector>
 #include <sstream>
-#include <iomanip>
-
-template<typename T>
-class SparseMatrix;
-
-class ExchangePattern;
-
-template<typename T>
-inline ExchangePattern create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelPartition& column_partition);
+#include <vector>
 
 template<typename T>
 class SparseMatrix
@@ -27,8 +19,7 @@ public:
 
     SparseMatrix() :
         rows_(0), columns_(0), nnz_(0), A_(nullptr), JA_(nullptr), IA_(nullptr), row_partition_(),
-        initialize_exchange_pattern_called(false), exchange_pattern_()
-    {}
+        initialize_exchange_pattern_called(false), exchange_pattern_() {}
 
     SparseMatrix(const SparseMatrix& other) :
         rows_(other.rows_), columns_(other.columns_), nnz_(other.nnz_), row_partition_(other.row_partition_),
@@ -50,9 +41,9 @@ public:
     SparseMatrix(SparseMatrix&& other) noexcept :
         rows_(other.rows()),
         columns_(other.columns()), nnz_(other.nnz_), A_(std::move(other.A_)), JA_(std::move(other.JA_)),
-        IA_(std::move(other.IA_)), row_partition_(std::move(other.row_partition_)), exchange_pattern_(other.exchange_pattern_),
-        initialize_exchange_pattern_called(other.initialize_exchange_pattern_called)
-    {}
+        IA_(std::move(other.IA_)), row_partition_(std::move(other.row_partition_)),
+        exchange_pattern_(other.exchange_pattern_),
+        initialize_exchange_pattern_called(other.initialize_exchange_pattern_called) {}
 
     SparseMatrix& operator=(const SparseMatrix& other)
     {
@@ -91,11 +82,10 @@ public:
         return *this;
     }
 
-    explicit SparseMatrix(int rows, int global_columns, std::function<int(int)> nz_per_row) :
+    explicit SparseMatrix(int rows, int global_columns, const std::function<int(int)>& nz_per_row) :
 
         rows_(rows), columns_(global_columns), row_partition_(MPI_COMM_SELF, {0, rows}),
         initialize_exchange_pattern_called(false), exchange_pattern_()
-
     {
         assert(columns_ >= 0);
         assert(rows >= 0);
@@ -139,7 +129,7 @@ public:
         }
     }
 
-    explicit SparseMatrix(ContiguousParallelPartition row_partition, int global_columns,
+    explicit SparseMatrix(const ContiguousParallelPartition& row_partition, int global_columns,
                           std::function<int(int)> nz_per_row) :
         row_partition_(row_partition),
         columns_(global_columns), rows_(row_partition.local_size()),
@@ -301,7 +291,7 @@ public:
 
     void initialize_exchange_pattern(const ContiguousParallelPartition& column_partition)
     {
-        exchange_pattern_ = create_exchange_pattern<T>(*this, column_partition);
+        exchange_pattern_ = create_exchange_pattern(*this, column_partition);
         initialize_exchange_pattern_called = true;
     }
 
@@ -311,22 +301,31 @@ public:
         return exchange_pattern_;
     }
 
-    void print() {
-        int rank; MPI_Comm_rank(row_partition_.communicator(), &rank);
-        int size; MPI_Comm_size(row_partition_.communicator(), &size);
+    void print()
+    {
+        int rank;
+        MPI_Comm_rank(row_partition_.communicator(), &rank);
+        int size;
+        MPI_Comm_size(row_partition_.communicator(), &size);
         std::vector<std::vector<T>> rows;
-        for (int i = 0; i < rows_; ++i) {
+        for(int i = 0; i < rows_; ++i)
+        {
             std::vector<T> row(columns(), 0.);
-            for (int j = 0; j < row_nz_size(i); ++j) {
+            for(int j = 0; j < row_nz_size(i); ++j)
+            {
                 row[row_nz_index(i, j)] = row_nz_entry(i, j);
             }
             rows.push_back(row);
         }
         std::cout << std::fixed << std::setprecision(2);
-        for (int i = 0; i < size; ++i) {
-            if (rank == i) {
-                for (int j = 0; j < rows_; ++j) {
-                    for (int k = 0; k < columns(); ++k) {
+        for(int i = 0; i < size; ++i)
+        {
+            if(rank == i)
+            {
+                for(int j = 0; j < rows_; ++j)
+                {
+                    for(int k = 0; k < columns(); ++k)
+                    {
                         std::cout << rows[j][k] << "\t";
                     }
                     std::cout << std::endl;

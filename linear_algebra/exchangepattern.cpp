@@ -3,11 +3,10 @@
 ExchangePattern::ExchangePattern() :
     _neighbor_processes(),
     _receive_indices(),
-    _send_indices()
-{}
+    _send_indices() {}
 
-
-ExchangePattern::ExchangePattern(std::vector<int> neighboring_processes, std::vector<std::vector<int>> receive_indices, std::vector<std::vector<int>> send_indices)
+ExchangePattern::ExchangePattern(std::vector<int> neighboring_processes, std::vector<std::vector<int>> receive_indices,
+                                 std::vector<std::vector<int>> send_indices)
 {
     _neighbor_processes = std::move(neighboring_processes);
     _receive_indices = std::move(receive_indices);
@@ -20,7 +19,6 @@ ExchangePattern::ExchangePattern(ExchangePattern&& other) noexcept
     _receive_indices = std::move(other._receive_indices);
     _send_indices = std::move(other._send_indices);
 }
-
 
 ExchangePattern::ExchangePattern(const ExchangePattern& other)
 {
