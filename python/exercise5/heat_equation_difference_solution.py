@@ -1,4 +1,5 @@
 import pmsc as mymodule
+import os
 
 def boundary_function(x, t):
     return x[0]**2 + 2 * x[1]**2 + 1 + 2 * t
@@ -12,6 +13,15 @@ def start_function(x):
 mymodule.MPI_Init()
 
 comm_world = mymodule.mpi_comm_world()
+
+if mymodule.mpi_comm_world().rank() == 0:
+    try:
+        os.mkdir("output")
+    except OSError as error:
+        pass
+mymodule.MPI_Barrier(comm_world)
+
+
 
 grid = mymodule.RegularGrid(comm_world, mymodule.Point(0, 0), mymodule.Point(1.0, 1.0), mymodule.MultiIndex(30, 30))
 

@@ -12,9 +12,11 @@ def poisson_function(x):
 mymodule.MPI_Init()
 
 if mymodule.mpi_comm_world().rank() == 0:
-    directory = os.path.dirname("./output")
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    try:
+        os.mkdir("output")
+    except OSError as error:
+        pass
+mymodule.MPI_Barrier(mymodule.mpi_comm_world())
 
 grid = mymodule.RegularGrid(mymodule.mpi_comm_world(), mymodule.Point(0, 0), mymodule.Point(1.0, 1.0), mymodule.MultiIndex(16, 16))
 

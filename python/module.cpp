@@ -98,6 +98,7 @@ PYBIND11_MODULE(pmsc, mod) {
             "MPI_Init", []() { MPI_Init(nullptr, nullptr); }, "Initializes MPI");
     mod.def(
             "MPI_Finalize", []() { MPI_Finalize(); }, "Finalizies MPI");
+    mod.def("MPI_Barrier", [](MpiCommWrapper comm){MPI_Barrier(comm);}, py::arg("communicator"));
 
     py::class_<Vector<scalar_t>>(mod, "Vector")
             .def(py::init<>())

@@ -1,5 +1,6 @@
 import pmsc as mymodule
 import numpy as np
+import os
 
 def boundary_function(x, t):
     return 0
@@ -12,13 +13,20 @@ def start_function(x):
 
 mymodule.MPI_Init()
 
+if mymodule.mpi_comm_world().rank() == 0:
+    try:
+        os.mkdir("output")
+    except OSError as error:
+        pass
+mymodule.MPI_Barrier(mymodule.mpi_comm_world())
+
 comm_world = mymodule.mpi_comm_world()
 
 grid = mymodule.RegularGrid(comm_world, mymodule.Point(-2.0, -2.0), mymodule.Point(2.0, 2.0), mymodule.MultiIndex(10, 10))
 
 phi_0 = mymodule.GridFunction(grid, start_function)
 
-mymodule.write_to_vtk('./vts_files/gaussian_hill_60_timesteps_10_grid_' + str(0), phi_0, 'gaussian_hill'  )
+mymodule.write_to_vtk('./output/gaussian_hill_60_timesteps_10_grid_' + str(0), phi_0, 'gaussian_hill'  )
 
 t = 2/120 
 
@@ -48,7 +56,7 @@ for i in range(1,61):
     
     gridFunc = mymodule.GridFunction(grid, x)
 
-    mymodule.write_to_vtk('./vts_files/gaussian_hill_60_timesteps_10_grid_' + str(i), gridFunc, 'gaussian_hill' )
+    mymodule.write_to_vtk('./output/gaussian_hill_60_timesteps_10_grid_' + str(i), gridFunc, 'gaussian_hill' )
     
     phi_0 = gridFunc
         
