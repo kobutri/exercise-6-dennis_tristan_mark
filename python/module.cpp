@@ -29,7 +29,7 @@ public:
                 x, b);
     }
 
-    void set_operator(std::shared_ptr<SparseMatrix<scalar_t>> A) override {
+    void set_operator(const SparseMatrix<scalar_t>& A) override {
         PYBIND11_OVERLOAD(void, Solver<scalar_t>, set_operator, A);
     }
 
@@ -49,7 +49,7 @@ public:
     using IterativeSolver<scalar_t>::last_residual_norm;
     using IterativeSolver<scalar_t>::last_stop_reason;
 
-    void set_operator(std::shared_ptr<SparseMatrix<scalar_t>> A) override {
+    void set_operator(const SparseMatrix<scalar_t>& A) override {
         PYBIND11_OVERLOAD(void, IterativeSolver<scalar_t>, set_operator, A);
     }
 

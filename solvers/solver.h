@@ -24,8 +24,8 @@ public:
 
     virtual ~Solver() = default;
 
-    virtual void set_operator(std::shared_ptr<SparseMatrix<T>> A) {
-        A_ = A;
+    virtual void set_operator(const SparseMatrix<T>& A) {
+        A_ = std::make_shared<SparseMatrix<T>>(A);
         set_operator_called = true;
     }
 
@@ -57,9 +57,9 @@ public:
             abs_tolerance(0),
             rel_tolerance(std::nullopt) {}
 
-    virtual void set_operator(std::shared_ptr<SparseMatrix<T>> A) override {
+    virtual void set_operator(const SparseMatrix<T>& A) override {
         Solver<T>::set_operator(A);
-        if (preconditioner_ != nullptr) (*(preconditioner_)).set_operator(A);
+        if (preconditioner_ != nullptr) (*(preconditioner_)).set_operator(this->A_);
     }
 
     virtual void setup() override {
