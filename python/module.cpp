@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "mpi_comm_wrapper.h"
+#include "../discretization/heat.h"
 
 class PySolver : public Solver<scalar_t> {
 public:
