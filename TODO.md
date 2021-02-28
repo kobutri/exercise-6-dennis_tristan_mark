@@ -11,7 +11,7 @@
 - improve exchange vector data by using this circular exchange method
 - test and improve gauss_seidel preconditioning
 - put classes in module.cpp in separate headers
-- transfer assemble_heat ... to head.h
-- cleanup recursive include disaster
+- transfer assemble_heat ... to head.h --- DONE
+- cleanup recursive include disaster --- DONE
 - cleanup
 - make nice comments
