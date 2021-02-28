@@ -99,13 +99,9 @@ public:
 private:
     Point min_corner_;
     Point max_corner_;
-    MultiIndex local_min_corner_;
     MultiIndex node_count_per_dimension_;
-    MultiIndex local_node_count_per_dimension_;
     MultiIndex process_per_dim_;
     ContiguousParallelPartition partition_;
-
-    void change(int coords[]) const;
 };
 
 #endif // PMSC_GRID_H

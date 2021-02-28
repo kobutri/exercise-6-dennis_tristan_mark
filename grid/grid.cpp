@@ -8,25 +8,21 @@ RegularGrid::RegularGrid(const RegularGrid &other) :
         max_corner_(other.max_corner_),
         node_count_per_dimension_(other.node_count_per_dimension_),
         process_per_dim_(other.process_per_dim_),
-        partition_(other.partition_),
-        local_min_corner_(other.local_min_corner_),
-        local_node_count_per_dimension_(other.local_node_count_per_dimension_) {}
+        partition_(other.partition_)
+        {}
 
 RegularGrid::RegularGrid(RegularGrid &&other) noexcept:
         min_corner_(other.min_corner_),
         max_corner_(other.max_corner_),
         node_count_per_dimension_(other.node_count_per_dimension_),
         process_per_dim_(other.process_per_dim_),
-        partition_(other.partition_),
-        local_min_corner_(other.local_min_corner_),
-        local_node_count_per_dimension_(other.local_node_count_per_dimension_) {}
+        partition_(other.partition_)
+        {}
 
 RegularGrid::RegularGrid(Point min_corner, Point max_corner, MultiIndex node_count_per_dimension_) :
         min_corner_(min_corner),
         max_corner_(max_corner),
         node_count_per_dimension_(node_count_per_dimension_),
-        local_min_corner_(MultiIndex(0)),
-        local_node_count_per_dimension_(node_count_per_dimension_),
         process_per_dim_(1) {
     for (int i = 0; i < space_dimension; i++) {
         assert(min_corner[i] <= max_corner[i]);
@@ -45,14 +41,12 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
         assert(node_count_per_dimension_[i] >= 0);
     }
     process_per_dim_ = MultiIndex();
-    local_min_corner_ = MultiIndex();
     int size;
     MPI_Comm_size(communicator, &size);
     int process_per_dim[space_dimension] = {0};
     int periods[space_dimension] = {0};
     int nodes_counter;
     int coordinates[space_dimension];
-    int nodes_for_first_processes;
     MPI_Dims_create(size, space_dimension, process_per_dim);
     for (int i = 0; i < space_dimension; i++) {
         process_per_dim_[i] = process_per_dim[i];
@@ -79,12 +73,6 @@ RegularGrid::RegularGrid(MPI_Comm communicator, Point min_corner, Point max_corn
         partition[i + 1] = partition[i] + nodes_counter;
     }
     partition_ = ContiguousParallelPartition(new_communicator, partition);
-    MPI_Cart_coords(new_communicator, partition_.process(), space_dimension, coordinates);
-    for (int i = 0; i < space_dimension; i++) {
-        nodes_for_first_processes = global_node_count_per_dimension[i] / process_per_dim_[i];
-        local_min_corner_[i] = coordinates[i] * nodes_for_first_processes;
-    }
-    local_node_count_per_dimension_ = node_count_per_dimension(partition_.process());
 }
 
 int RegularGrid::number_of_nodes() const {
@@ -215,7 +203,7 @@ MultiIndex RegularGrid::global_node_count_per_dimension() const {
 }
 
 MultiIndex RegularGrid::node_count_per_dimension() const {
-    return local_node_count_per_dimension_;
+    return node_count_per_dimension(partition_.process());
 }
 
 MultiIndex RegularGrid::node_count_per_dimension(int process_rank) const {
