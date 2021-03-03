@@ -47,7 +47,7 @@ create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelP
     std::vector<int> neighboring_processes(number_of_processes, 0);
     std::vector<std::vector<int>> receive_indices(number_of_processes);
     std::vector<std::vector<int>> send_indices(number_of_processes);
-    //int process = column_partition.process();
+    
     int process_size = column_partition.local_size();
     int owner_process = 0;
     int global_index;
@@ -72,12 +72,7 @@ create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelP
             }
         }
     }
-    //    if(rank == 0) {
-    //        for (int i = 0; i < neighboring_processes.size(); ++i) {
-    //            std::cout << neighboring_processes[i] << ", ";
-    //        }
-    //        std::cout << std::endl;
-    //    }
+    
     std::vector<int> neighboring_processes_2;                          //to avoid sorting the neighboring_processes vector all entrys are initialized with 0
     for(unsigned int i = 0; i < neighboring_processes.size(); i++)     //one is assigned to all neighbors during upper for-loop
     {                                                                  //this loop create a vector which only contains neighbors
