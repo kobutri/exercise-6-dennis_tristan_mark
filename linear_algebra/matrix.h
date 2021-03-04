@@ -301,7 +301,7 @@ public:
         return exchange_pattern_;
     }
 
-    void print()
+    void print() const
     {
         int rank;
         MPI_Comm_rank(row_partition_.communicator(), &rank);
