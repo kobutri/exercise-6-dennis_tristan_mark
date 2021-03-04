@@ -13,5 +13,5 @@
 - put classes in module.cpp in separate headers -- DONE
 - transfer assemble_heat ... to head.h --- DONE
 - cleanup recursive include disaster --- DONE
-- cleanup
+- cleanup -- FORMATTING DONE
 - make nice comments
