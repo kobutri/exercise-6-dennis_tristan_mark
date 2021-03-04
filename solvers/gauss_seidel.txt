@@ -1,9 +1,4 @@
-In order to parallelize Gauss Seiel precondonditioning, we need to implement parallelized backsubstitution.
-The implementation used right now, uses a naive approach, where every process sends the solutions of their partition
-to the other processes.
-First, receive solutions from all previous processes.
-Second, perform normal backsubstition on the partition owned by the process
-Third, broadcast these solutions to all other processes.
-
-A more sophisticated solution would use a modified ExchangePattern, that works on the lower triangular matrix.
-The exchange of data could not use a broadcast anymore, but a algorithm like
+Back substitution is sequential in nature.
+We use a modified createExchangePattern that only considers the elements of the lower triangular matrix.
+We cannot use our parallel exchange_vector_data, because solving for entry n of the vector requires all previous solutions.
+To achieve this, every process first receives all previous results, calculates it's own and then sends those to the other processes.
