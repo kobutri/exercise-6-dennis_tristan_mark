@@ -9,7 +9,7 @@
 - make gridfunction hold shared_ptr instead of unique_ptr   --- DONE
 - improve grid partitioning algorithm   --- HOW?
 - improve exchange vector data by using this circular exchange method
-- test and improve gauss_seidel preconditioning
+- test and improve gauss_seidel preconditioning -- DONE
 - put classes in module.cpp in separate headers -- DONE
 - transfer assemble_heat ... to head.h --- DONE
 - cleanup recursive include disaster --- DONE
