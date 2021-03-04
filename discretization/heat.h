@@ -8,9 +8,9 @@ assemble_heat_matrix(const RegularGrid &grid, const GridFunction<T> &previous_te
                      const std::function<T(const Point &, const scalar_t)> &rhs_function, //
                      const std::function<T(const Point &, const scalar_t)> &boundary_function) {
 
-    std::function<T(const Point &)> rhs_function_t = [=](const Point &point) { return rhs_function(point, t); };
-    std::function<T(const Point &)> boundary_function_t = [=](const Point &point) {
-        return boundary_function(point, t);
+    std::function<T(const Point &)> rhs_function_t = [=](const Point &point) { return rhs_function(point, t); }; //since assemble_poisson_matrix is used to create matrix 
+    std::function<T(const Point &)> boundary_function_t = [=](const Point &point) {                             //and vector for timeindependent differential equation
+        return boundary_function(point, t);                                                                    //the function has to be independent of time t for assemble_poisson_matrix
     };
 
 
@@ -20,7 +20,7 @@ assemble_heat_matrix(const RegularGrid &grid, const GridFunction<T> &previous_te
     SparseMatrix<T> Matrix = solution_poisson.first;
     Vector<T> vector = solution_poisson.second;
 
-    for (int i = 0; i < vector.size(); i++)  //!
+    for (int i = 0; i < vector.size(); i++)  //                                 change of matrix and vector given by assemble_poisson_matrix 
     {
         int i_global = partition.to_global_index(i);
         if (grid.is_boundary_node(i_global) == false) {
