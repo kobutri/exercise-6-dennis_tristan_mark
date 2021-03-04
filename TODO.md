@@ -7,7 +7,7 @@
 - use less memory to assemble poisson matrix by using new constructor  --- DONE
 - should we store the diagonal matrix element first for each row? --- DONE?
 - make gridfunction hold shared_ptr instead of unique_ptr   --- DONE
-- improve grid partitioning algorithm   --- HOW?
+- improve grid partitioning algorithm   --- HOW? --- DONE
 - improve exchange vector data by using this circular exchange method DONE
 - test and improve gauss_seidel preconditioning -- DONE
 - put classes in module.cpp in separate headers -- DONE
