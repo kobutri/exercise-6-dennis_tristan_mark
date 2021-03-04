@@ -54,7 +54,7 @@ create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelP
             {
                 if(!column_partition.is_owned_by_local_process(column_index))
                 {
-                    processes[column_index].first.insert(column_index);
+                    processes[column_partition.owner_process(column_index)].first.insert(column_index);
                     processes[column_partition.owner_process(column_index)].second.insert(column_partition.to_global_index(i));
                 }
             }
