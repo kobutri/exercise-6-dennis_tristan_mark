@@ -12,6 +12,7 @@ public:
 
     int rank() const;
     int size() const;
+
 private:
     MPI_Comm communicator_;
 };

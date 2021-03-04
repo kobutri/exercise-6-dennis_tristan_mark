@@ -95,4 +95,3 @@ const std::vector<std::vector<int>>& ExchangePattern::send_indices() const
 {
     return _send_indices;
 }
-

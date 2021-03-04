@@ -2,18 +2,19 @@
 #ifndef PMSC_GRID_IO_H
 #define PMSC_GRID_IO_H
 
+#include <cassert>
 #include <filesystem>
-#include <iostream>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <iomanip>
-#include <cassert>
 
 #include "grid.h"
 #include "gridfunction.h"
 
-namespace detail {
+namespace detail
+{
 
 inline std::string make_extend_string(const MultiIndex& start, const MultiIndex& count, const MultiIndex& global_count, int ghost_level)
 {
@@ -58,7 +59,7 @@ inline MultiIndex node_offset_per_dimension(const MPI_Comm& communicator, int pr
     return result;
 }
 
-} // detail namespace
+} // namespace detail
 
 template<typename T>
 void write_to_vtk(const std::filesystem::path& file_path, const GridFunction<T>& grid_function, const std::string& name)
@@ -117,19 +118,30 @@ void write_to_vtk(const std::filesystem::path& file_path, const GridFunction<T>&
 
     if(is_master)
     {
-        master_file << "<?xml version=\"1.0\"?>" << "\n"
-                    << "<VTKFile type=\"PStructuredGrid\">" << "\n"
-                    << "<PStructuredGrid WholeExtent=\"" << global_extend << "\" GhostLevel=\"1\">" << "\n"
-                    << "<PPoints>" << "\n"
-                    << "<PDataArray type=\"Float64\" Name=\"coordinate\" NumberOfComponents=\"3\" format=\"ascii\">" << "\n";
+        master_file << "<?xml version=\"1.0\"?>"
+                    << "\n"
+                    << "<VTKFile type=\"PStructuredGrid\">"
+                    << "\n"
+                    << "<PStructuredGrid WholeExtent=\"" << global_extend << "\" GhostLevel=\"1\">"
+                    << "\n"
+                    << "<PPoints>"
+                    << "\n"
+                    << "<PDataArray type=\"Float64\" Name=\"coordinate\" NumberOfComponents=\"3\" format=\"ascii\">"
+                    << "\n";
     }
 
-    process_file << "<?xml version=\"1.0\"?>" << "\n"
-                 << "<VTKFile type=\"StructuredGrid\">" << "\n"
-                 << "<StructuredGrid WholeExtent=\"" << local_extend << "\">" << "\n"
-                 << "<Piece Extent=\"" << local_extend << "\">" << "\n"
-                 << "<Points>" << "\n"
-                 << "<DataArray type=\"Float64\" Name=\"coordinate\" NumberOfComponents=\"3\" format=\"ascii\">" << "\n";
+    process_file << "<?xml version=\"1.0\"?>"
+                 << "\n"
+                 << "<VTKFile type=\"StructuredGrid\">"
+                 << "\n"
+                 << "<StructuredGrid WholeExtent=\"" << local_extend << "\">"
+                 << "\n"
+                 << "<Piece Extent=\"" << local_extend << "\">"
+                 << "\n"
+                 << "<Points>"
+                 << "\n"
+                 << "<DataArray type=\"Float64\" Name=\"coordinate\" NumberOfComponents=\"3\" format=\"ascii\">"
+                 << "\n";
 
     const auto number_of_nodes = partition.local_size();
     std::array<std::pair<int, int>, space_dimension> neighbors;
@@ -169,16 +181,24 @@ void write_to_vtk(const std::filesystem::path& file_path, const GridFunction<T>&
 
     if(is_master)
     {
-        master_file << "</PDataArray>" << "\n"
-                    << "</PPoints>" << "\n"
-                    << "<PPointData>" << "\n"
-                    << "<PDataArray type=\"Float64\" Name=\"" << name << "\" NumberOfComponents=\"1\" format=\"ascii\">" << "\n";
+        master_file << "</PDataArray>"
+                    << "\n"
+                    << "</PPoints>"
+                    << "\n"
+                    << "<PPointData>"
+                    << "\n"
+                    << "<PDataArray type=\"Float64\" Name=\"" << name << "\" NumberOfComponents=\"1\" format=\"ascii\">"
+                    << "\n";
     }
 
-    process_file << "</DataArray>" << "\n"
-                 << "</Points>" << "\n"
-                 << "<PointData>" << "\n"
-                 << "<DataArray type=\"Float64\" Name=\"" << name << "\" NumberOfComponents=\"1\" format=\"ascii\">" << "\n";
+    process_file << "</DataArray>"
+                 << "\n"
+                 << "</Points>"
+                 << "\n"
+                 << "<PointData>"
+                 << "\n"
+                 << "<DataArray type=\"Float64\" Name=\"" << name << "\" NumberOfComponents=\"1\" format=\"ascii\">"
+                 << "\n";
 
     for(int node_index = 0; node_index < extend_count; ++node_index)
     {
@@ -215,23 +235,35 @@ void write_to_vtk(const std::filesystem::path& file_path, const GridFunction<T>&
 
     if(is_master)
     {
-        master_file << "</PDataArray>" << "\n"
-                    << "</PPointData>" << "\n";
+        master_file << "</PDataArray>"
+                    << "\n"
+                    << "</PPointData>"
+                    << "\n";
         for(int p = 0; p < number_of_processes; ++p)
         {
             const auto process_node_offset_per_dimension = detail::node_offset_per_dimension(partition.communicator(), p, global_node_count_per_dimension, processes_per_dimension);
             const auto process_extend = detail::make_extend_string(process_node_offset_per_dimension, grid_function.grid().node_count_per_dimension(p), global_node_count_per_dimension, 1);
-            master_file << "<Piece Extent=\"" << process_extend << "\" Source=\"" << file_path.stem().string() << "_processor"  << p << ".vts" << "\">" << "\n"
-                        << "</Piece>" << "\n";
+            master_file << "<Piece Extent=\"" << process_extend << "\" Source=\"" << file_path.stem().string() << "_processor" << p << ".vts"
+                        << "\">"
+                        << "\n"
+                        << "</Piece>"
+                        << "\n";
         }
-        master_file << "</PStructuredGrid>" << "\n"
-                    << "</VTKFile>" << "\n";
+        master_file << "</PStructuredGrid>"
+                    << "\n"
+                    << "</VTKFile>"
+                    << "\n";
     }
-    process_file << "</DataArray>" << "\n"
-                 << "</PointData>" << "\n"
-                 << "</Piece>" << "\n"
-                 << "</StructuredGrid>" << "\n"
-                 << "</VTKFile>" << "\n";
+    process_file << "</DataArray>"
+                 << "\n"
+                 << "</PointData>"
+                 << "\n"
+                 << "</Piece>"
+                 << "\n"
+                 << "</StructuredGrid>"
+                 << "\n"
+                 << "</VTKFile>"
+                 << "\n";
 }
 
 #endif // PMSC_GRID_IO_H

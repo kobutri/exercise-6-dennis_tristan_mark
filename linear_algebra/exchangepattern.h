@@ -4,9 +4,9 @@
 #include "contiguousparallelpartition.h"
 #include <algorithm>
 #include <iostream>
-#include <utility>
 #include <map>
 #include <set>
+#include <utility>
 
 class ExchangePattern
 {
@@ -39,7 +39,6 @@ private:
 template<typename T>
 class SparseMatrix;
 
-
 template<typename T>
 inline ExchangePattern
 create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelPartition& column_partition)
@@ -64,7 +63,8 @@ create_exchange_pattern(const SparseMatrix<T>& matrix, const ContiguousParallelP
     std::vector<int> neighbors;
     std::vector<std::vector<int>> receive_indices;
     std::vector<std::vector<int>> send_indices;
-    for(const auto& [key, value] : processes) {
+    for(const auto& [key, value] : processes)
+    {
         neighbors.push_back(key);
         receive_indices.push_back(std::vector<int>(value.first.begin(), value.first.end()));
         send_indices.push_back(std::vector<int>(value.second.begin(), value.second.end()));

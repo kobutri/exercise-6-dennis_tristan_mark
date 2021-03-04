@@ -4,20 +4,23 @@
 #include "../linear_algebra/matrix.h"
 
 template<typename T>
-class Preconditioner {
+class Preconditioner
+{
 public:
     Preconditioner() :
-            A_(nullptr),
-            set_operator_called(false),
-            setup_called(false) {}
+        A_(nullptr),
+        set_operator_called(false),
+        setup_called(false) {}
 
-    Preconditioner(Preconditioner &&precond) {
+    Preconditioner(Preconditioner&& precond)
+    {
         A_ = precond.A_;
         precond.set_operator_called = precond.set_operator_called;
         precond.setup_called = precond.setup_called;
     }
 
-    Preconditioner(const Preconditioner &precond) {
+    Preconditioner(const Preconditioner& precond)
+    {
         A_ = precond.A_;
         precond.set_operator_called = precond.set_operator_called;
         precond.setup_called = precond.setup_called;
@@ -25,18 +28,19 @@ public:
 
     virtual ~Preconditioner() = default;
 
-    virtual void set_operator(std::shared_ptr<SparseMatrix<T>> A) {
+    virtual void set_operator(std::shared_ptr<SparseMatrix<T>> A)
+    {
         A_ = A;
         set_operator_called = true;
     }
 
-
-    virtual void setup() {
+    virtual void setup()
+    {
         assert(set_operator_called == true);
         setup_called = true;
     }
 
-    virtual void apply(Vector<T> &x, const Vector<T> &b) = 0;
+    virtual void apply(Vector<T>& x, const Vector<T>& b) = 0;
 
 protected:
     std::shared_ptr<SparseMatrix<T>> A_;

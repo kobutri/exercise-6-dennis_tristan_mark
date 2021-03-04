@@ -6,21 +6,29 @@
 #include <cassert>
 
 template<typename T>
-class JacobiIteration : public Preconditioner<T> {
+class JacobiIteration : public Preconditioner<T>
+{
 public:
-    virtual void apply(Vector<T> &x, const Vector<T> &b) override {
+    virtual void apply(Vector<T>& x, const Vector<T>& b) override
+    {
         assert(Preconditioner<T>::setup_called == true);
-        for (int i = 0; i < x.size(); ++i) {
+        for(int i = 0; i < x.size(); ++i)
+        {
             T diagonalElement = 0;
-            for (int j = 0; j < (*(Preconditioner<T>::A_)).row_nz_size(i); ++j) {
-                if ((*(Preconditioner<T>::A_)).row_nz_index(i, j) == i) {
+            for(int j = 0; j < (*(Preconditioner<T>::A_)).row_nz_size(i); ++j)
+            {
+                if((*(Preconditioner<T>::A_)).row_nz_index(i, j) == i)
+                {
                     diagonalElement = (*(Preconditioner<T>::A_)).row_nz_entry(i, j);
                     break;
                 }
             }
-            if (diagonalElement == 0) {
+            if(diagonalElement == 0)
+            {
                 continue;
-            } else {
+            }
+            else
+            {
                 x[i] = b[i] / diagonalElement;
             }
         }

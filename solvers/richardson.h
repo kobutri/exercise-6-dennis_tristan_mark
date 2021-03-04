@@ -5,7 +5,8 @@
 #include "solver.h"
 
 template<typename T>
-class RichardsonSolver : public IterativeSolver<T> {
+class RichardsonSolver : public IterativeSolver<T>
+{
 public:
     virtual void setup() override
     {
@@ -14,7 +15,8 @@ public:
         result = Vector<T>(this->A_->row_partition());
     }
 
-    virtual void solve(Vector<T> &x, const Vector<T> &b) override {
+    virtual void solve(Vector<T>& x, const Vector<T>& b) override
+    {
         assert(Solver<T>::setup_called == true);
         this->A_.get()->initialize_exchange_pattern(this->A_.get()->row_partition());
         int i = 0;
@@ -22,18 +24,20 @@ public:
         calc_res(residuum, *(Solver<T>::A_), x, b);
         T r_0 = 1 / norm(residuum);
 
-        if (r_0 == 0) {
+        if(r_0 == 0)
+        {
             IterativeSolver<T>::last_iterations_ = 0;
             IterativeSolver<T>::last_res_norm_ = 0;
             Solver<T>::stop_reason = StopReason::converged;
             return;
         }
         T r_k = r_0;
-        while (IterativeSolver<T>::abs_tolerance < r_k &&
-               IterativeSolver<T>::rel_tolerance < r_k * r_0 &&
-               i < IterativeSolver<T>::iteration_limit) {
+        while(IterativeSolver<T>::abs_tolerance < r_k &&
+              IterativeSolver<T>::rel_tolerance < r_k * r_0 &&
+              i < IterativeSolver<T>::iteration_limit)
+        {
 
-            if (IterativeSolver<T>::preconditioner_ != nullptr)
+            if(IterativeSolver<T>::preconditioner_ != nullptr)
                 (*(IterativeSolver<T>::preconditioner_)).apply(result, residuum);
             else
                 result = residuum;
@@ -48,11 +52,13 @@ public:
 
         IterativeSolver<T>::last_iterations_ = i;
         IterativeSolver<T>::last_res_norm_ = r_k;
-        if (IterativeSolver<T>::abs_tolerance >= r_k) {
+        if(IterativeSolver<T>::abs_tolerance >= r_k)
+        {
             Solver<T>::stop_reason = StopReason::converged;
             return;
         }
-        if (IterativeSolver<T>::rel_tolerance >= r_k * r_0) {
+        if(IterativeSolver<T>::rel_tolerance >= r_k * r_0)
+        {
             Solver<T>::stop_reason = StopReason::converged;
             return;
         }
@@ -60,8 +66,8 @@ public:
     }
 
 private:
-    Vector<T> residuum ;
-    Vector<T> result ;
+    Vector<T> residuum;
+    Vector<T> result;
 };
 
 #endif

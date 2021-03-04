@@ -45,20 +45,20 @@ private:
 template<typename T>
 MPI_Datatype convert_to_MPI_TYPE();
 
-template<typename T> 
+template<typename T>
 void single_exchange(int process, int i, int neighbor_index, const std::vector<std::vector<int>>& receive_indices,
-                        const std::vector<std::vector<int>>& send_indices, std::vector<std::vector<T>>& data_per_neighboring_process,
-                        std::vector<T>& result, const ContiguousParallelPartition& partition, const Vector<T>& vector  )
+                     const std::vector<std::vector<int>>& send_indices, std::vector<std::vector<T>>& data_per_neighboring_process,
+                     std::vector<T>& result, const ContiguousParallelPartition& partition, const Vector<T>& vector)
 {
     MPI_Datatype datatype = convert_to_MPI_TYPE<T>();
     MPI_Status status;
     int local_index;
-    if (neighbor_index < process)
+    if(neighbor_index < process)
     {
-        result.resize(receive_indices[i].size()); 
+        result.resize(receive_indices[i].size());
         MPI_Recv(result.data(), static_cast<int>(result.size()), datatype, neighbor_index,
-        neighbor_index, partition.communicator(), &status); 
-        data_per_neighboring_process[i] = result;  
+                 neighbor_index, partition.communicator(), &status);
+        data_per_neighboring_process[i] = result;
         std::vector<T> send_neighbor;
         for(int j = 0; j < static_cast<int>((send_indices[i]).size()); j++)
         {
@@ -66,7 +66,7 @@ void single_exchange(int process, int i, int neighbor_index, const std::vector<s
             send_neighbor.push_back(vector[local_index]);
         }
         MPI_Send(send_neighbor.data(), static_cast<int>(send_neighbor.size()), datatype, neighbor_index,
-                process, partition.communicator());  
+                 process, partition.communicator());
     }
     else
     {
@@ -77,13 +77,13 @@ void single_exchange(int process, int i, int neighbor_index, const std::vector<s
             send_neighbor.push_back(vector[local_index]);
         }
         MPI_Send(send_neighbor.data(), static_cast<int>(send_neighbor.size()), datatype, neighbor_index,
-                process, partition.communicator());
+                 process, partition.communicator());
         result.resize(receive_indices[i].size());
         MPI_Recv(result.data(), static_cast<int>(result.size()), datatype, neighbor_index,
-        neighbor_index, partition.communicator(), &status);
-        data_per_neighboring_process[i] = result;    
+                 neighbor_index, partition.communicator(), &status);
+        data_per_neighboring_process[i] = result;
     }
-    return;                    
+    return;
 }
 
 template<typename T>
@@ -95,50 +95,52 @@ ExchangeData<T> exchange_vector_data(const ExchangePattern& exchange_pattern, co
     std::vector<int> neighboring_processes = exchange_pattern.neighboring_processes();
     int number_of_processes = partition.owner_process(partition.global_size() - 1) + 1;
     int process = partition.process();
-    int neighbor_index;   
+    int neighbor_index;
     int neighboring_processes_size = static_cast<int>(neighboring_processes.size());
     std::vector<std::vector<T>> data_per_neighboring_process(neighboring_processes.size());
     std::vector<T> result;
     int i;
 
-    if (number_of_processes % 2 == 1)
+    if(number_of_processes % 2 == 1)
     {
-        for (int k = 0; k < number_of_processes; k++)
+        for(int k = 0; k < number_of_processes; k++)
         {
-            neighbor_index = (k-process) % number_of_processes;
-            neighbor_index = neighbor_index < 0? number_of_processes + neighbor_index: neighbor_index;
-            for (i = 0; i < neighboring_processes_size; i++)
+            neighbor_index = (k - process) % number_of_processes;
+            neighbor_index = neighbor_index < 0 ? number_of_processes + neighbor_index : neighbor_index;
+            for(i = 0; i < neighboring_processes_size; i++)
             {
-                if (neighboring_processes[i]== neighbor_index) break;                
+                if(neighboring_processes[i] == neighbor_index) break;
             }
-            if (neighbor_index != process && i < neighboring_processes_size)
+            if(neighbor_index != process && i < neighboring_processes_size)
             {
-                single_exchange(process, i,neighbor_index, receive_indices, send_indices, data_per_neighboring_process, result, partition, vector );
+                single_exchange(process, i, neighbor_index, receive_indices, send_indices, data_per_neighboring_process, result, partition, vector);
             }
         }
     }
     else
     {
         int idle;
-        for (int k = 0; k < number_of_processes -1; k++)
+        for(int k = 0; k < number_of_processes - 1; k++)
         {
-            idle = ((number_of_processes/2)*k)%(number_of_processes-1);
-            if (process == number_of_processes-1) neighbor_index = idle;
-            else if(process == idle)neighbor_index = number_of_processes-1;
+            idle = ((number_of_processes / 2) * k) % (number_of_processes - 1);
+            if(process == number_of_processes - 1)
+                neighbor_index = idle;
+            else if(process == idle)
+                neighbor_index = number_of_processes - 1;
             else
             {
-                neighbor_index = (k-process) % (number_of_processes-1) ;
-                neighbor_index= neighbor_index < 0? number_of_processes-1+neighbor_index : neighbor_index  ;
-            } 
-            for (i = 0; i < neighboring_processes_size; i++)
-            {
-                if (neighboring_processes[i]== neighbor_index) break;                
+                neighbor_index = (k - process) % (number_of_processes - 1);
+                neighbor_index = neighbor_index < 0 ? number_of_processes - 1 + neighbor_index : neighbor_index;
             }
-            if (neighbor_index != process && i < neighboring_processes_size)
+            for(i = 0; i < neighboring_processes_size; i++)
             {
-                single_exchange(process, i,neighbor_index, receive_indices, send_indices, data_per_neighboring_process, result, partition, vector );       
+                if(neighboring_processes[i] == neighbor_index) break;
             }
-        }        
+            if(neighbor_index != process && i < neighboring_processes_size)
+            {
+                single_exchange(process, i, neighbor_index, receive_indices, send_indices, data_per_neighboring_process, result, partition, vector);
+            }
+        }
     }
     ExchangeData<T> exchange_data(exchange_pattern, data_per_neighboring_process);
     return exchange_data;
