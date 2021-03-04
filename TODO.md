@@ -10,7 +10,7 @@
 - improve grid partitioning algorithm   --- HOW?
 - improve exchange vector data by using this circular exchange method
 - test and improve gauss_seidel preconditioning
-- put classes in module.cpp in separate headers
+- put classes in module.cpp in separate headers -- DONE
 - transfer assemble_heat ... to head.h --- DONE
 - cleanup recursive include disaster --- DONE
 - cleanup
