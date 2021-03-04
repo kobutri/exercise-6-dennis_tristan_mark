@@ -96,16 +96,3 @@ const std::vector<std::vector<int>>& ExchangePattern::send_indices() const
     return _send_indices;
 }
 
-bool entry_in_vector(std::vector<int>& vector, int value)   //checks if the value is already member of vector
-{                                                           //is neccessary to avoid double entries in vector neighboring_processes
-    int i = 0;
-    while(i < vector.size())
-    {
-        if(vector[i] == value)
-        {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
-}
